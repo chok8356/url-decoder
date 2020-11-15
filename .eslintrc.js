@@ -24,6 +24,7 @@ module.exports = {
     '@typescript-eslint/interface-name-prefix': ['error', {
       prefixWithI: 'always'
     }],
+    '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/type-annotation-spacing': ['error', {
       after: true
     }],

@@ -6,19 +6,26 @@
       </div>
     </div>
     <div class="ud-app__body">
-      <textarea
-        cols="30"
-        rows="10" />
+      <ud-editor v-model:value="value" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
+import UdEditor from '@/components/UdEditor.vue'
 
 export default defineComponent({
   name: 'App',
   components: {
+    UdEditor
+  },
+  setup() {
+    const value = ref('')
+
+    return {
+      value
+    }
   }
 })
 </script>
@@ -27,6 +34,8 @@ export default defineComponent({
 @include b(app) {
   // background: url('~@/assets/images/app-bg.png') center;
   color: #232323;
+  display: flex;
+  flex-direction: column;
   font-family: monospace, sans-serif;
   font-size: $font-size;
   -webkit-font-smoothing: antialiased;
@@ -43,7 +52,8 @@ export default defineComponent({
   }
 
   @include e(body) {
-    padding: 0.5rem 2rem;
+    flex-grow: 1;
+    padding: 0 2rem 2rem;
   }
 
   @include e(title) {
