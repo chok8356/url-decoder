@@ -1,0 +1,12 @@
+@import '~normalize.css/normalize';
+
+html,
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  width: 100vw;
+}
+
+* {
+  box-sizing: border-box;
+}
