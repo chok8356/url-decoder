@@ -13,6 +13,8 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 
+import { formatting, getInsertedText } from '@/helpers/utils'
+
 export default defineComponent({
   name: 'UdEditor',
   props: {
@@ -28,72 +30,14 @@ export default defineComponent({
       emit('update:value', str)
     }
 
-    function decode(str: string) {
-      if (!str) return ''
-      return decodeURIComponent(str)
-    }
-
-    function getUrlVars(url: string) {
-      let hash
-      const result: any = {}
-      const hashes = url.slice(url.indexOf('?') + 1).split('&')
-      for (let i = 0; i < hashes.length; i++) {
-        hash = hashes[i].split('=')
-        result[hash[0]] = hash[1]
-      }
-      return result
-    }
-
-    function parse(str: string) {
-      let json: any = {}
-      let error = null
-      if (!str) {
-        return {
-          json,
-          error
-        }
-      }
-      try {
-        json = JSON.parse(str)
-        if (json && Object.keys(json)?.length) {
-          for (const key in json) {
-            const data = json[key]
-            if (data) {
-              const { json: obj, error } = parse(data)
-              if (!error) json[key] = obj
-            }
-          }
-        }
-      } catch (err) {
-        error = err
-      }
-      return {
-        json,
-        error
-      }
-    }
-
-    function stringify(json: any) {
-      let str = ''
-      let error = null
-      if (!json) {
-        return {
-          str,
-          error
-        }
-      } try {
-        str = JSON.stringify(json, undefined, 2)
-      } catch (err) {
-        error = err
-      }
-      return {
-        str,
-        error
-      }
+    function onError(error: string) {
+      alert(error)
+      emit('error', error)
     }
 
     function onPaste(event: ClipboardEvent) {
       event.preventDefault()
+
       if (!textarea.value) return
 
       const { clipboardData } = event
@@ -104,16 +48,15 @@ export default defineComponent({
 
       if (!textData) return
 
-      const text = JSON.stringify(getUrlVars(decode(textData)))
-      const { json, error: parseError } = parse(text)
+      const { value, error } = formatting(textData)
 
-      if (parseError) return updateValue('')
+      if (error) onError(error)
 
-      const { str, error: stringifyError } = stringify(json)
+      const fullText = getInsertedText(textarea.value, value)
 
-      if (stringifyError) return updateValue('')
+      if (!fullText) return
 
-      updateValue(str)
+      updateValue(fullText)
     }
 
     return {
@@ -142,6 +85,7 @@ $shadow-size: 0.25rem;
   @include e(textarea) {
     border: 1px solid $color-black;
     box-shadow: $shadow-size  $shadow-size 0 #000;
+    font-size: 0.8rem;
     height: 100%;
     outline: none;
     padding: 0;

@@ -6,7 +6,9 @@
       </div>
     </div>
     <div class="ud-app__body">
-      <ud-editor v-model:value="value" />
+      <ud-editor
+        v-model:value="value"
+        @error="setError" />
     </div>
   </div>
 </template>
@@ -22,9 +24,16 @@ export default defineComponent({
   },
   setup() {
     const value = ref('')
+    const error = ref(new Error())
+
+    function setError(err: string) {
+      error.value = new Error(err)
+    }
 
     return {
-      value
+      value,
+      error,
+      setError
     }
   }
 })
@@ -32,11 +41,11 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @include b(app) {
-  // background: url('~@/assets/images/app-bg.png') center;
+  background: url('~@/assets/images/app-bg.png') center;
   color: #232323;
   display: flex;
   flex-direction: column;
-  font-family: monospace, sans-serif;
+  font-family: Consolas, monospace, sans-serif;
   font-size: $font-size;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -46,7 +55,6 @@ export default defineComponent({
 
   @include e(header) {
     display: block;
-    // height: $header-height;
     padding: 0.5rem 2rem;
     width: 100%;
   }
