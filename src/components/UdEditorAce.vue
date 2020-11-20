@@ -10,9 +10,14 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
-import ace from 'ace-builds'
-import 'ace-builds/webpack-resolver'
+import 'ace-builds/src-min-noconflict/ace'
+import 'ace-builds/src-min-noconflict/mode-json'
+import 'ace-builds/src-min-noconflict/theme-xcode'
+
 import { formatting } from '@/helpers/utils'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ace = require('ace-builds/src-min-noconflict/ace')
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const jsBeautify = require('js-beautify')

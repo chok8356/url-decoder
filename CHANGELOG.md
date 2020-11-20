@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2020-11-20
+
+### Fixed
+
+- Import only used files for 'ace' editor.
+
 ## [0.2.0] - 2020-11-20
 
 ### Added
 
-- New editor based on 'ace' editor
+- New editor based on 'ace' editor.
 
 ## [0.1.2] - 2020-11-15
 
