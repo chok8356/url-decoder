@@ -4,36 +4,46 @@
       <div class="ud-app__title">
         <h1>URL Decoder</h1>
       </div>
+      <div
+        v-if="IsHaveError"
+        class="ud-app__error">
+        Invalid JSON
+      </div>
     </div>
     <div class="ud-app__body">
-      <ud-editor
-        v-model:value="value"
-        @error="setError" />
+      <ud-editor-ace
+        :value="value"
+        @update:value="updateValue" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import UdEditor from '@/components/UdEditor.vue'
+import UdEditorAce from '@/components/UdEditorAce.vue'
+
+// TODO: Add JSON validation
+// import { IsValidJson } from '@/helpers/utils'
 
 export default defineComponent({
   name: 'App',
   components: {
-    UdEditor
+    UdEditorAce
   },
   setup() {
-    const value = ref('')
-    const error = ref(new Error())
+    const value = ref<string>('')
+    const IsHaveError = ref<boolean>(false)
 
-    function setError(err: string) {
-      error.value = new Error(err)
+    function updateValue(str: string) {
+      // TODO: Add JSON validation
+      // IsHaveError.value = !IsValidJson(str)
+      value.value = str
     }
 
     return {
       value,
-      error,
-      setError
+      updateValue,
+      IsHaveError
     }
   }
 })
@@ -54,14 +64,33 @@ export default defineComponent({
   width: 100vw;
 
   @include e(header) {
-    display: block;
+    align-items: center;
+    display: flex;
+    height: $header-height;
     padding: 0.5rem 2rem;
+    position: fixed;
     width: 100%;
+  }
+
+  @include e(title) {
+    flex-grow: 1;
+  }
+
+  @include e(error) {
+    background-color: $color-white;
+    border: 1px solid $color-black;
+    box-shadow: $shadow-size  $shadow-size 0 #000;
+    color: $color-danger;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    text-align: right;
   }
 
   @include e(body) {
     flex-grow: 1;
-    padding: 0 2rem 2rem;
+    height: 100vh;
+    padding: $header-height 2rem 2rem;
+    width: 100vw;
   }
 
   @include e(title) {
