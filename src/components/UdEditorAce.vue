@@ -1,6 +1,7 @@
 <template>
   <div
     class="ud-editor-ace"
+    :style="styles"
     :class="{'is-focused': isFocused}">
     <div
       ref="container"
@@ -9,12 +10,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
+import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch, computed } from 'vue'
 import 'ace-builds/src-min-noconflict/ace'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
 
-import { formatting } from '@/helpers/utils'
+import { formatting, wait } from '@/helpers/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const ace = require('ace-builds/src-min-noconflict/ace')
@@ -27,12 +28,22 @@ export enum Themes {
   dark = 'ace/theme/monokai'
 }
 
+const TRANSITION_DURATION = 200
+
 export default defineComponent({
   name: 'UdEditorAce',
   props: {
     value: {
       type: String,
       default: ''
+    },
+    isCompare: {
+      type: Boolean,
+      default: false
+    },
+    width: {
+      type: String,
+      default: '100%'
     }
   },
   emits: ['error', 'update:value'],
@@ -49,9 +60,9 @@ export default defineComponent({
       tabSize: 2,
       useWorker: false,
       wrap: true,
-      useSoftTabs: true,
       showPrintMargin: false,
-      selectionStyle: 'text'
+      selectionStyle: 'text',
+      autoScrollEditorIntoView: true
     })
 
     function updateValue(str: string) {
@@ -98,6 +109,17 @@ export default defineComponent({
       editor.value = null
     }
 
+    async function resize() {
+      if (!editor.value) return
+      // wait container resize animation
+      await wait(TRANSITION_DURATION)
+      editor.value.resize(true)
+    }
+
+    watch(() => props.width, () => {
+      resize()
+    })
+
     onMounted(() => {
       init()
     })
@@ -116,12 +138,12 @@ export default defineComponent({
 })
 </script>
 
-<style scoped lang="scss">
+<style scoped lang="scss" vars="{ width }">
 @include b(editor-ace) {
-  border: 1px solid $color-grey;
   height: 100%;
   outline: none;
-  width: 100%;
+  transition: width 200ms ease-in-out;
+  width: var(--width);
 
   @include e(container) {
     height: 100%;

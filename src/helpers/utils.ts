@@ -80,3 +80,9 @@ export function IsValidJson(str: string) {
   }
   return true;
 }
+
+export async function wait(ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}

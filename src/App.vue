@@ -1,14 +1,20 @@
 <template>
-  <div class="ud-app">
+  <div
+    class="ud-app"
+    :class="classes">
     <div class="ud-app__header">
       <div class="ud-app__title">
         <h1>URL Decoder</h1>
       </div>
       <div
         class="ud-app-actions">
-        <div class="ud-app-actions__item ud-app-actions__item--compare">
+        <div
+          class="ud-app-actions__item ud-app-actions__item--compare"
+          @click="isCompare = !isCompare">
           <!-- compare -->
-          <ud-icon name="compare" />
+          <ud-icon
+            name="compare"
+            :active="isCompare === true" />
         </div>
         <a
           class="ud-app-actions__item ud-app-actions__item--github"
@@ -20,14 +26,21 @@
     </div>
     <div class="ud-app__body">
       <ud-editor-ace
+        :is-compare="isCompare"
         :value="value"
+        :width="isCompare ? '50%' : '100%'"
+        @update:value="updateValue" />
+      <ud-editor-ace
+        :is-compare="isCompare"
+        :value="value"
+        :width="isCompare ? '50%' : '0%'"
         @update:value="updateValue" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import UdEditorAce from '@/components/UdEditorAce.vue'
 import UdIcon from '@/components/UdIcon.vue'
 
@@ -39,7 +52,14 @@ export default defineComponent({
   },
   setup() {
     const value = ref<string>('')
-    const IsHaveError = ref<boolean>(false)
+
+    const isCompare = ref<boolean>(false)
+
+    const classes = computed(() => {
+      return {
+        'is-compare': isCompare.value === true
+      }
+    })
 
     function updateValue(str: string) {
       value.value = str
@@ -48,7 +68,8 @@ export default defineComponent({
     return {
       value,
       updateValue,
-      IsHaveError
+      classes,
+      isCompare
     }
   }
 })
@@ -70,6 +91,7 @@ export default defineComponent({
 
   @include e(header) {
     align-items: center;
+    border-bottom: 1px solid $color-grey;
     display: flex;
     height: $header-height;
     padding: 0.5rem 1rem;
@@ -78,13 +100,16 @@ export default defineComponent({
   }
 
   @include e(body) {
+    display: flex;
     flex-grow: 1;
-    height: 100vh;
+    height: 100%;
     padding-top: $header-height;
-    width: 100vw;
+    width: 100%;
   }
 
   @include e(title) {
+    flex-grow: 1;
+
     h1 {
       font-size: 1.5rem;
       margin: 0;
