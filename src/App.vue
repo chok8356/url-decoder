@@ -26,14 +26,14 @@
     </div>
     <div class="ud-app__body">
       <ud-editor-ace
-        :is-compare="isCompare"
         :value="value"
+        :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
         @update:value="updateValue" />
       <ud-editor-ace
-        :is-compare="isCompare"
+        v-if="isCompare"
         :value="value"
-        :width="isCompare ? '50%' : '0%'"
+        width="50%"
         @update:value="updateValue" />
     </div>
   </div>

@@ -1,8 +1,6 @@
 <template>
   <div
-    class="ud-editor-ace"
-    :style="styles"
-    :class="{'is-focused': isFocused}">
+    class="ud-editor-ace">
     <div
       ref="container"
       class="ud-editor-ace__container" />
@@ -10,7 +8,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch, computed } from 'vue'
+import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import 'ace-builds/src-min-noconflict/ace'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
@@ -27,9 +25,6 @@ export enum Themes {
   light = 'ace/theme/xcode',
   dark = 'ace/theme/monokai'
 }
-
-const TRANSITION_DURATION = 200
-
 export default defineComponent({
   name: 'UdEditorAce',
   props: {
@@ -37,13 +32,13 @@ export default defineComponent({
       type: String,
       default: ''
     },
-    isCompare: {
-      type: Boolean,
-      default: false
-    },
     width: {
       type: String,
       default: '100%'
+    },
+    isActive: {
+      type: Boolean,
+      default: true
     }
   },
   emits: ['error', 'update:value'],
@@ -51,7 +46,6 @@ export default defineComponent({
     const container: any = ref<HTMLElement | null>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editor: any = reactive({})
-    const isFocused = ref<boolean>(false)
 
     const options = reactive({
       mode: 'ace/mode/json',
@@ -86,21 +80,18 @@ export default defineComponent({
     }
 
     function focus() {
-      isFocused.value = true
-    }
-
-    function blur() {
-      isFocused.value = false
+      if (!editor.value) return
+      if (editor.value.isFocused()) return
+      editor.value.focus()
     }
 
     function init() {
       if (!container.value) return
       editor.value = ace.edit(container.value)
       editor.value.setOptions(options)
-      editor.value.on('focus', focus)
-      editor.value.on('blur', blur)
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
+      if (props.isActive) focus()
     }
 
     function destroy() {
@@ -112,9 +103,13 @@ export default defineComponent({
     async function resize() {
       if (!editor.value) return
       // wait container resize animation
-      await wait(TRANSITION_DURATION)
+      await wait(1)
       editor.value.resize(true)
     }
+
+    watch(() => props.isActive, (value: boolean) => {
+      if (value) focus()
+    })
 
     watch(() => props.width, () => {
       resize()
@@ -129,10 +124,7 @@ export default defineComponent({
     })
 
     return {
-      container,
-      editor,
-      options,
-      isFocused
+      container
     }
   }
 })
@@ -142,7 +134,6 @@ export default defineComponent({
 @include b(editor-ace) {
   height: 100%;
   outline: none;
-  transition: width 200ms ease-in-out;
   width: var(--width);
 
   @include e(container) {
