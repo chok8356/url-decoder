@@ -31,7 +31,7 @@ export default defineComponent({
   name: 'UdEditorAce',
   props: {
     value: {
-      type: [Object, Array, Number, String, Boolean],
+      type: String,
       default: ''
     }
   },
@@ -118,17 +118,10 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @include b(editor-ace) {
-  border: 1px solid $color-black;
-  box-shadow: $shadow-size  $shadow-size 0 #000;
+  border: 1px solid $color-grey;
   height: 100%;
   outline: none;
   width: 100%;
-
-  @include when(focused) {
-    border-color: $color-primary;
-    box-shadow: $shadow-size $shadow-size 0 $color-primary;
-    outline: solid 1px $color-primary;
-  }
 
   @include e(container) {
     height: 100%;
