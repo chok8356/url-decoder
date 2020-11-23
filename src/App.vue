@@ -1,49 +1,145 @@
 <template>
-  <div class="ud-app">
+  <div
+    class="ud-app"
+    :class="{'is-compare': isCompare === true}">
     <div class="ud-app__header">
       <div class="ud-app__title">
         <h1>URL Decoder</h1>
       </div>
       <div
-        v-if="IsHaveError"
-        class="ud-app__error">
-        Invalid JSON
+        class="ud-app-actions">
+        <div
+          class="ud-app-actions__item ud-app-actions__item--compare"
+          @click="isCompare = !isCompare">
+          <!-- compare -->
+          <ud-icon
+            name="compare"
+            :active="isCompare === true" />
+        </div>
+        <a
+          class="ud-app-actions__item ud-app-actions__item--github"
+          href="https://github.com/chok8356/url-decoder"
+          target="_blank">
+          <ud-icon name="github" />
+        </a>
       </div>
     </div>
     <div class="ud-app__body">
       <ud-editor-ace
-        :value="value"
-        @update:value="updateValue" />
+        v-model:value="valueLeft"
+        :is-compare="isCompare"
+        :diff="diffs.left"
+        :is-active="!isCompare"
+        :width="isCompare ? '50%' : '100%'"
+        @init="(editor) => editors.left = editor" />
+      <ud-editor-ace
+        v-if="isCompare"
+        v-model:value="valueRight"
+        :diff="diffs.right"
+        width="50%"
+        @init="(editor) => editors.right = editor" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, watch, reactive } from 'vue'
 import UdEditorAce from '@/components/UdEditorAce.vue'
+import UdIcon from '@/components/UdIcon.vue'
+import { checkProperty } from '@/helpers/utils'
 
-// TODO: Add JSON validation
-// import { IsValidJson } from '@/helpers/utils'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Diff = require('diff')
+
+const FIND_OPTIONS = {
+  wrap: true,
+  caseSensitive: true,
+  preventScroll: true
+}
 
 export default defineComponent({
   name: 'App',
   components: {
-    UdEditorAce
+    UdEditorAce,
+    UdIcon
   },
   setup() {
-    const value = ref<string>('')
-    const IsHaveError = ref<boolean>(false)
+    const editors: any = reactive({
+      left: {},
+      right: {}
+    })
+    const valueLeft = ref<string>('')
+    const valueRight = ref<string>('')
+    const isCompare = ref<boolean>(true)
+    const diffs = ref({
+      left: {
+        added: false,
+        data: []
+      },
+      right: {
+        added: true,
+        data: []
+      }
+    })
 
-    function updateValue(str: string) {
-      // TODO: Add JSON validation
-      // IsHaveError.value = !IsValidJson(str)
-      value.value = str
+    function getDiff(value1: string, value2: string) {
+      if (!value1 || !value2) return []
+      const diff = Diff.diffChars(value1, value2)
+
+      const options: any = Object.assign({}, FIND_OPTIONS)
+
+      const ranges: any = {
+        left: {
+          added: false,
+          data: []
+        },
+        right: {
+          added: true,
+          data: []
+        }
+      }
+
+      const offset = {
+        left: 0,
+        right: 0
+      }
+
+      for (const part of diff) {
+        if (!checkProperty(part, 'added') && checkProperty(part, 'removed')) {
+          offset.left += part.count
+          offset.right += part.count
+        } else if (part.added === true) {
+          const start = ranges.right.data[ranges.right.data.length - 1]
+          console.log(options.start)
+          if (start) options.start = start
+          const range = editors.right.find(part.value, options)
+          ranges.right.data.push(range)
+          offset.right += part.count
+        } else if (part.removed === true) {
+          const start = ranges.left.data[ranges.left.data.length - 1]
+          if (start) options.start = start
+          console.log(options.start)
+          const range = editors.left.find(part.value, options)
+          ranges.left.data.push(range)
+          offset.left += part.count
+        }
+      }
+
+      console.log(offset)
+
+      return ranges
     }
 
+    watch([() => valueLeft.value, () => valueRight.value], () => {
+      diffs.value = getDiff(valueLeft.value, valueRight.value)
+    })
+
     return {
-      value,
-      updateValue,
-      IsHaveError
+      valueLeft,
+      valueRight,
+      isCompare,
+      editors,
+      diffs
     }
   }
 })
@@ -51,7 +147,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @include b(app) {
-  background: url('~@/assets/images/app-bg.png') center;
+  // background: url('~@/assets/images/app-bg.png') center;
   color: #232323;
   display: flex;
   flex-direction: column;
@@ -65,39 +161,54 @@ export default defineComponent({
 
   @include e(header) {
     align-items: center;
+    border-bottom: 1px solid $color-grey;
     display: flex;
     height: $header-height;
-    padding: 0.5rem 2rem;
+    padding: 0.5rem 1rem;
     position: fixed;
+    width: 100%;
+  }
+
+  @include e(body) {
+    display: flex;
+    flex-grow: 1;
+    height: 100%;
+    padding-top: $header-height;
     width: 100%;
   }
 
   @include e(title) {
     flex-grow: 1;
-  }
 
-  @include e(error) {
-    background-color: $color-white;
-    border: 1px solid $color-black;
-    box-shadow: $shadow-size  $shadow-size 0 #000;
-    color: $color-danger;
-    font-weight: 700;
-    padding: 0.25rem 0.5rem;
-    text-align: right;
-  }
-
-  @include e(body) {
-    flex-grow: 1;
-    height: 100vh;
-    padding: $header-height 2rem 2rem;
-    width: 100vw;
-  }
-
-  @include e(title) {
     h1 {
+      font-size: 1.5rem;
       margin: 0;
     }
   }
 }
 
+@include b(app-actions) {
+  align-items: center;
+  display: inline-flex;
+  margin-left: -0.5rem;
+  width: auto;
+
+  * {
+    margin-left: 0.5rem;
+  }
+
+  @include e(item) {
+    align-items: center;
+    background-color: $color-white;
+    color: $color-black;
+    cursor: pointer;
+    display: inline-flex;
+    width: auto;
+
+    svg {
+      height: 1.5rem;
+      width: 1.5rem;
+    }
+  }
+}
 </style>

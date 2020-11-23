@@ -1,4 +1,4 @@
-export function decode(str: string) {
+export function decode(str: string): string {
   if (!str) return ''
   try {
     return decodeURIComponent(str)
@@ -14,9 +14,10 @@ export function getUrlVars(url: string) {
   const hashes = url.slice(url.indexOf('?') + 1).split('&')
   for (const value of hashes) {
     hash = value.split('=')
+    if (hash[0] === url) return {}
     result[hash[0]] = hash[1]
   }
-  return result
+  return result && Object.keys(result)?.length > 0 ? result : {}
 }
 
 export function parse(str: string) {
@@ -47,36 +48,46 @@ export function stringify(json: any) {
   }
 }
 
-export function formatting(text: string) {
+export function formatting(data: string) {
   try {
-    const stringifyText = JSON.stringify(getUrlVars(decode(text)))
-    if (!stringifyText) return text
-    const json = parse(stringifyText)
-    if (!json || !Object.keys(json)?.length) return text
-    const str = stringify(json)
-    if (!str) return text
-    return str
+    let text = decode(data)
+    if (isValidJson(text)) {
+      return text
+    }
+    const vars = getUrlVars(text)
+    if (vars && Object.keys(vars)?.length) {
+      text = stringify(vars)
+    }
+    text = parse(text)
+    if (typeof text === 'object') {
+      text = stringify(text)
+    }
+    return text
   } catch (error) {
     console.error('Formatting error', error)
-    return text
+    return data
   }
 }
 
-export function getInsertedText(el: HTMLInputElement, text: string ) {
-  if(!el) return
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
-  const value = el.value
-  if (start === null) return
-  if (end === null) return
-  return  value.substring(0, start) + text + value.substring(end, value.length);
-}
-
-export function IsValidJson(str: string) {
+export function isValidJson(str: string) {
   try {
     JSON.parse(str);
   } catch (e) {
-      return false;
+    return false;
   }
   return true;
 }
+
+export async function wait(ms: number) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export function checkProperty(obj: any, prop: string) {
+  return Object.prototype.hasOwnProperty.call(obj, prop)
+}
+
+// export function computeDiff() {
+
+// }

@@ -1,7 +1,6 @@
 <template>
   <div
-    class="ud-editor-ace"
-    :class="{'is-focused': isFocused}">
+    class="ud-editor-ace">
     <div
       ref="container"
       class="ud-editor-ace__container" />
@@ -9,38 +8,49 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, reactive, ref } from 'vue'
-import 'ace-builds/src-min-noconflict/ace'
+import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import ace from 'ace-builds'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
-
-import { formatting } from '@/helpers/utils'
-
+import { formatting, wait } from '@/helpers/utils'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const ace = require('ace-builds/src-min-noconflict/ace')
+const JsBeautify = require('js-beautify')
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const jsBeautify = require('js-beautify')
+const Range = ace.Range
 
 export enum Themes {
   light = 'ace/theme/xcode',
   dark = 'ace/theme/monokai'
 }
-
 export default defineComponent({
   name: 'UdEditorAce',
   props: {
     value: {
-      type: [Object, Array, Number, String, Boolean],
+      type: String,
       default: ''
+    },
+    diff: {
+      type: Object,
+      default: () => ({})
+    },
+    width: {
+      type: String,
+      default: '100%'
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    isCompare: {
+      type: Boolean,
+      default: false
     }
   },
-  emits: ['error', 'update:value'],
+  emits: ['init', 'update:value'],
   setup(props, { emit }) {
     const container: any = ref<HTMLElement | null>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const editor: any = reactive({})
-    const isFocused = ref<boolean>(false)
 
     const options = reactive({
       mode: 'ace/mode/json',
@@ -49,9 +59,9 @@ export default defineComponent({
       tabSize: 2,
       useWorker: false,
       wrap: true,
-      useSoftTabs: true,
       showPrintMargin: false,
-      selectionStyle: 'text'
+      selectionStyle: 'text',
+      autoScrollEditorIntoView: true
     })
 
     function updateValue(str: string) {
@@ -69,34 +79,78 @@ export default defineComponent({
       editor.value.execCommand('paste', formattedText)
       const textOriginal = editor.value.getValue()
       // eslint-disable-next-line @typescript-eslint/camelcase
-      const beautifyText = jsBeautify(textOriginal, { indent_size: 2 })
+      const beautifyText = JsBeautify(textOriginal, { indent_size: 2 })
       editor.value.setValue(beautifyText)
       editor.value.clearSelection()
     }
 
     function focus() {
-      isFocused.value = true
-    }
-
-    function blur() {
-      isFocused.value = false
+      if (!editor.value) return
+      if (editor.value.isFocused()) return
+      editor.value.focus()
     }
 
     function init() {
       if (!container.value) return
       editor.value = ace.edit(container.value)
       editor.value.setOptions(options)
-      editor.value.on('focus', focus)
-      editor.value.on('blur', blur)
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
+      if (props.isActive) focus()
+      emit('init', editor.value)
     }
 
     function destroy() {
       if (!editor.value) return
+      updateValue('')
       editor.value.destroy()
       editor.value = null
     }
+
+    async function resize() {
+      if (!editor.value) return
+      // wait container resize animation
+      await wait(1)
+      editor.value.resize(true)
+    }
+
+    watch(() => props.isActive, (value: boolean) => {
+      if (value) focus()
+    })
+
+    watch(() => props.width, () => {
+      resize()
+    })
+
+    function clearDiff() {
+      const markers = editor.value.session.getMarkers()
+      for (const key in markers) {
+        editor.value.getSession().removeMarker(key)
+      }
+    }
+
+    function showDiff() {
+      if (!props.diff.data?.length) return
+      const added = props.diff.added
+
+      for (const range of props.diff.data) {
+        const { start, end }: any = range
+        editor.value.session.addMarker(
+          new Range(start.row, start.column, end.row, end.column),
+          added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
+          'text'
+        )
+      }
+    }
+
+    watch(() => props.diff, () => {
+      clearDiff()
+      showDiff()
+    })
+
+    watch(() => props.isCompare, () => {
+      clearDiff()
+    })
 
     onMounted(() => {
       init()
@@ -107,32 +161,39 @@ export default defineComponent({
     })
 
     return {
-      container,
-      editor,
-      options,
-      isFocused
+      container
     }
   }
 })
 </script>
 
-<style scoped lang="scss">
+<style scoped lang="scss" vars="{ width }">
 @include b(editor-ace) {
-  border: 1px solid $color-black;
-  box-shadow: $shadow-size  $shadow-size 0 #000;
   height: 100%;
   outline: none;
-  width: 100%;
-
-  @include when(focused) {
-    border-color: $color-primary;
-    box-shadow: $shadow-size $shadow-size 0 $color-primary;
-    outline: solid 1px $color-primary;
-  }
+  width: var(--width);
 
   @include e(container) {
     height: 100%;
     width: 100%;
   }
+}
+</style>
+
+<style lang="scss">
+@include b(editor-ace-diff-line-added) {
+  background-color: #d8f2ff;
+  border-bottom: 1px solid #a2d7f2;
+  border-top: 1px solid #a2d7f2;
+  position: absolute;
+  z-index: 4;
+}
+
+@include b(editor-ace-diff-line-remove) {
+  background-color: #ffd8da;
+  border-bottom: 1px solid #ffd8da;
+  border-top: 1px solid #ffd8da;
+  position: absolute;
+  z-index: 4;
 }
 </style>
