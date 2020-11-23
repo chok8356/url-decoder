@@ -28,14 +28,14 @@
       <ud-editor-ace
         v-model:value="valueLeft"
         :is-compare="isCompare"
-        :diff="diffs.left"
+        :diff="markers.left"
         :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
         @init="(editor) => editors.left = editor" />
       <ud-editor-ace
         v-if="isCompare"
         v-model:value="valueRight"
-        :diff="diffs.right"
+        :diff="markers.right"
         width="50%"
         @init="(editor) => editors.right = editor" />
     </div>
@@ -46,16 +46,7 @@
 import { defineComponent, ref, watch, reactive } from 'vue'
 import UdEditorAce from '@/components/UdEditorAce.vue'
 import UdIcon from '@/components/UdIcon.vue'
-import { checkProperty } from '@/helpers/utils'
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Diff = require('diff')
-
-const FIND_OPTIONS = {
-  wrap: true,
-  caseSensitive: true,
-  preventScroll: true
-}
+import { DIFF } from '@/helpers/diff'
 
 export default defineComponent({
   name: 'App',
@@ -70,8 +61,8 @@ export default defineComponent({
     })
     const valueLeft = ref<string>('')
     const valueRight = ref<string>('')
-    const isCompare = ref<boolean>(false)
-    const diffs = ref({
+    const isCompare = ref<boolean>(true)
+    const markers = ref({
       left: {
         added: false,
         data: []
@@ -82,56 +73,8 @@ export default defineComponent({
       }
     })
 
-    function getDiff(value1: string, value2: string) {
-      if (!value1 || !value2) return []
-      const diff = Diff.diffChars(value1, value2)
-
-      const options: any = Object.assign({}, FIND_OPTIONS)
-
-      const ranges: any = {
-        left: {
-          added: false,
-          data: []
-        },
-        right: {
-          added: true,
-          data: []
-        }
-      }
-
-      const offset = {
-        left: 0,
-        right: 0
-      }
-
-      for (const part of diff) {
-        if (!checkProperty(part, 'added') && checkProperty(part, 'removed')) {
-          offset.left += part.count
-          offset.right += part.count
-        } else if (part.added === true) {
-          const start = ranges.right.data[ranges.right.data.length - 1]
-          console.log(options.start)
-          if (start) options.start = start
-          const range = editors.right.find(part.value, options)
-          ranges.right.data.push(range)
-          offset.right += part.count
-        } else if (part.removed === true) {
-          const start = ranges.left.data[ranges.left.data.length - 1]
-          if (start) options.start = start
-          console.log(options.start)
-          const range = editors.left.find(part.value, options)
-          ranges.left.data.push(range)
-          offset.left += part.count
-        }
-      }
-
-      console.log(offset)
-
-      return ranges
-    }
-
     watch([() => valueLeft.value, () => valueRight.value], () => {
-      diffs.value = getDiff(valueLeft.value, valueRight.value)
+      markers.value = DIFF.getDiff(editors, valueLeft.value, valueRight.value)
     })
 
     return {
@@ -139,7 +82,7 @@ export default defineComponent({
       valueRight,
       isCompare,
       editors,
-      diffs
+      markers
     }
   }
 })
