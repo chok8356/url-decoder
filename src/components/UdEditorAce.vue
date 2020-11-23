@@ -125,18 +125,17 @@ export default defineComponent({
     function clearDiff() {
       const markers = editor.value.session.getMarkers()
       for (const key in markers) {
-        editor.value.getSession().removeMarker(key)
+        editor.value.session.removeMarker(key)
       }
     }
 
     function showDiff() {
       if (!props.diff.data?.length) return
       const added = props.diff.added
-
       for (const range of props.diff.data) {
-        const { start, end }: any = range
+        const { startLine, startChar, endLine, endChar }: any = range
         editor.value.session.addMarker(
-          new Range(start.row, start.column, end.row, end.column),
+          new Range(startLine, startChar, endLine, endChar),
           added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
           'text'
         )
