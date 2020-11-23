@@ -40,6 +40,10 @@ export default defineComponent({
     isActive: {
       type: Boolean,
       default: true
+    },
+    isCompare: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['init', 'update:value'],
@@ -142,6 +146,10 @@ export default defineComponent({
     watch(() => props.diff, () => {
       clearDiff()
       showDiff()
+    })
+
+    watch(() => props.isCompare, () => {
+      clearDiff()
     })
 
     onMounted(() => {

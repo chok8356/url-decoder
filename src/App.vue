@@ -27,6 +27,7 @@
     <div class="ud-app__body">
       <ud-editor-ace
         v-model:value="valueLeft"
+        :is-compare="isCompare"
         :diff="diffs.left"
         :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
@@ -85,6 +86,8 @@ export default defineComponent({
       if (!value1 || !value2) return []
       const diff = Diff.diffChars(value1, value2)
 
+      const options: any = Object.assign({}, FIND_OPTIONS)
+
       const ranges: any = {
         left: {
           added: false,
@@ -95,24 +98,34 @@ export default defineComponent({
           data: []
         }
       }
+
       const offset = {
         left: 0,
         right: 0
       }
+
       for (const part of diff) {
         if (!checkProperty(part, 'added') && checkProperty(part, 'removed')) {
           offset.left += part.count
           offset.right += part.count
         } else if (part.added === true) {
-          const range = editors.right.find(part.value, FIND_OPTIONS)
+          const start = ranges.right.data[ranges.right.data.length - 1]
+          console.log(options.start)
+          if (start) options.start = start
+          const range = editors.right.find(part.value, options)
           ranges.right.data.push(range)
-          offset.left += part.count
-        } else if (part.removed === true) {
-          const range = editors.left.find(part.value, FIND_OPTIONS)
-          ranges.left.data.push(range)
           offset.right += part.count
+        } else if (part.removed === true) {
+          const start = ranges.left.data[ranges.left.data.length - 1]
+          if (start) options.start = start
+          console.log(options.start)
+          const range = editors.left.find(part.value, options)
+          ranges.left.data.push(range)
+          offset.left += part.count
         }
       }
+
+      console.log(offset)
 
       return ranges
     }
