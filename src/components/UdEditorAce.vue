@@ -1,6 +1,9 @@
 <template>
   <div
-    class="ud-editor-ace">
+    class="ud-editor-ace"
+    :style="{
+      width: width
+    }">
     <div
       ref="container"
       class="ud-editor-ace__container" />
@@ -166,11 +169,11 @@ export default defineComponent({
 })
 </script>
 
-<style scoped lang="scss" vars="{ width }">
+<style scoped lang="scss">
 @include b(editor-ace) {
   height: 100%;
   outline: none;
-  width: var(--width);
+  width: 100%;
 
   @include e(container) {
     height: 100%;
