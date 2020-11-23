@@ -61,7 +61,7 @@ export default defineComponent({
     })
     const valueLeft = ref<string>('')
     const valueRight = ref<string>('')
-    const isCompare = ref<boolean>(true)
+    const isCompare = ref<boolean>(false)
     const markers = ref({
       left: {
         added: false,
