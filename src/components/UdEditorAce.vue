@@ -9,17 +9,14 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import 'ace-builds/src-min-noconflict/ace'
+import ace from 'ace-builds'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
-
 import { formatting, wait } from '@/helpers/utils'
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const ace = require('ace-builds/src-min-noconflict/ace')
+const JsBeautify = require('js-beautify')
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const jsBeautify = require('js-beautify')
+const Range = ace.Range
 
 export enum Themes {
   light = 'ace/theme/xcode',
@@ -32,6 +29,10 @@ export default defineComponent({
       type: String,
       default: ''
     },
+    diff: {
+      type: Object,
+      default: () => ({})
+    },
     width: {
       type: String,
       default: '100%'
@@ -41,7 +42,7 @@ export default defineComponent({
       default: true
     }
   },
-  emits: ['error', 'update:value'],
+  emits: ['init', 'update:value'],
   setup(props, { emit }) {
     const container: any = ref<HTMLElement | null>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +75,7 @@ export default defineComponent({
       editor.value.execCommand('paste', formattedText)
       const textOriginal = editor.value.getValue()
       // eslint-disable-next-line @typescript-eslint/camelcase
-      const beautifyText = jsBeautify(textOriginal, { indent_size: 2 })
+      const beautifyText = JsBeautify(textOriginal, { indent_size: 2 })
       editor.value.setValue(beautifyText)
       editor.value.clearSelection()
     }
@@ -92,10 +93,12 @@ export default defineComponent({
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
       if (props.isActive) focus()
+      emit('init', editor.value)
     }
 
     function destroy() {
       if (!editor.value) return
+      updateValue('')
       editor.value.destroy()
       editor.value = null
     }
@@ -113,6 +116,32 @@ export default defineComponent({
 
     watch(() => props.width, () => {
       resize()
+    })
+
+    function clearDiff() {
+      const markers = editor.value.session.getMarkers()
+      for (const key in markers) {
+        editor.value.getSession().removeMarker(key)
+      }
+    }
+
+    function showDiff() {
+      if (!props.diff.data?.length) return
+      const added = props.diff.added
+
+      for (const range of props.diff.data) {
+        const { start, end }: any = range
+        editor.value.session.addMarker(
+          new Range(start.row, start.column, end.row, end.column),
+          added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
+          'text'
+        )
+      }
+    }
+
+    watch(() => props.diff, () => {
+      clearDiff()
+      showDiff()
     })
 
     onMounted(() => {
@@ -140,5 +169,23 @@ export default defineComponent({
     height: 100%;
     width: 100%;
   }
+}
+</style>
+
+<style lang="scss">
+@include b(editor-ace-diff-line-added) {
+  background-color: #d8f2ff;
+  border-bottom: 1px solid #a2d7f2;
+  border-top: 1px solid #a2d7f2;
+  position: absolute;
+  z-index: 4;
+}
+
+@include b(editor-ace-diff-line-remove) {
+  background-color: #ffd8da;
+  border-bottom: 1px solid #ffd8da;
+  border-top: 1px solid #ffd8da;
+  position: absolute;
+  z-index: 4;
 }
 </style>

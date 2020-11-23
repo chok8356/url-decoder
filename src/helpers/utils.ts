@@ -83,3 +83,11 @@ export async function wait(ms: number) {
     setTimeout(resolve, ms);
   });
 }
+
+export function checkProperty(obj: any, prop: string) {
+  return Object.prototype.hasOwnProperty.call(obj, prop)
+}
+
+// export function computeDiff() {
+
+// }

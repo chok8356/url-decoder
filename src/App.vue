@@ -1,7 +1,7 @@
 <template>
   <div
     class="ud-app"
-    :class="classes">
+    :class="{'is-compare': isCompare === true}">
     <div class="ud-app__header">
       <div class="ud-app__title">
         <h1>URL Decoder</h1>
@@ -26,23 +26,35 @@
     </div>
     <div class="ud-app__body">
       <ud-editor-ace
-        :value="value"
+        v-model:value="valueLeft"
+        :diff="diffs.left"
         :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
-        @update:value="updateValue" />
+        @init="(editor) => editors.left = editor" />
       <ud-editor-ace
         v-if="isCompare"
-        :value="value"
+        v-model:value="valueRight"
+        :diff="diffs.right"
         width="50%"
-        @update:value="updateValue" />
+        @init="(editor) => editors.right = editor" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, watch, reactive } from 'vue'
 import UdEditorAce from '@/components/UdEditorAce.vue'
 import UdIcon from '@/components/UdIcon.vue'
+import { checkProperty } from '@/helpers/utils'
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Diff = require('diff')
+
+const FIND_OPTIONS = {
+  wrap: true,
+  caseSensitive: true,
+  preventScroll: true
+}
 
 export default defineComponent({
   name: 'App',
@@ -51,25 +63,70 @@ export default defineComponent({
     UdIcon
   },
   setup() {
-    const value = ref<string>('')
-
-    const isCompare = ref<boolean>(false)
-
-    const classes = computed(() => {
-      return {
-        'is-compare': isCompare.value === true
+    const editors: any = reactive({
+      left: {},
+      right: {}
+    })
+    const valueLeft = ref<string>('')
+    const valueRight = ref<string>('')
+    const isCompare = ref<boolean>(true)
+    const diffs = ref({
+      left: {
+        added: false,
+        data: []
+      },
+      right: {
+        added: true,
+        data: []
       }
     })
 
-    function updateValue(str: string) {
-      value.value = str
+    function getDiff(value1: string, value2: string) {
+      if (!value1 || !value2) return []
+      const diff = Diff.diffChars(value1, value2)
+
+      const ranges: any = {
+        left: {
+          added: false,
+          data: []
+        },
+        right: {
+          added: true,
+          data: []
+        }
+      }
+      const offset = {
+        left: 0,
+        right: 0
+      }
+      for (const part of diff) {
+        if (!checkProperty(part, 'added') && checkProperty(part, 'removed')) {
+          offset.left += part.count
+          offset.right += part.count
+        } else if (part.added === true) {
+          const range = editors.right.find(part.value, FIND_OPTIONS)
+          ranges.right.data.push(range)
+          offset.left += part.count
+        } else if (part.removed === true) {
+          const range = editors.left.find(part.value, FIND_OPTIONS)
+          ranges.left.data.push(range)
+          offset.right += part.count
+        }
+      }
+
+      return ranges
     }
 
+    watch([() => valueLeft.value, () => valueRight.value], () => {
+      diffs.value = getDiff(valueLeft.value, valueRight.value)
+    })
+
     return {
-      value,
-      updateValue,
-      classes,
-      isCompare
+      valueLeft,
+      valueRight,
+      isCompare,
+      editors,
+      diffs
     }
   }
 })
