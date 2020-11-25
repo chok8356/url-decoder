@@ -43,10 +43,6 @@ export default defineComponent({
     isActive: {
       type: Boolean,
       default: true
-    },
-    isCompare: {
-      type: Boolean,
-      default: false
     }
   },
   emits: ['init', 'update:value'],
@@ -97,14 +93,13 @@ export default defineComponent({
       if (!container.value) return
       editor.value = ace.edit(container.value)
       editor.value.setOptions(options)
-      editor.value.on('change', change)
-      editor.value.onPaste = onPaste
-      if (props.isActive) focus()
-      console.log(props.value)
       if (props.value !== undefined) {
         editor.value.setValue(props.value)
         editor.value.clearSelection()
       }
+      editor.value.on('change', change)
+      editor.value.onPaste = onPaste
+      if (props.isActive) focus()
       emit('init', editor.value)
     }
 
@@ -122,19 +117,12 @@ export default defineComponent({
       editor.value.resize(true)
     }
 
-    watch(() => props.isActive, (value: boolean) => {
-      if (value) focus()
-    })
-
-    watch(() => props.width, () => {
-      resize()
-    })
-
     function clearDiff() {
       const markers = editor.value.getSession().getMarkers()
       for (const key in markers) {
         editor.value.getSession().removeMarker(key)
       }
+      editor.value.updateSelectionMarkers()
     }
 
     function showDiff() {
@@ -150,22 +138,18 @@ export default defineComponent({
       }
     }
 
+    watch(() => props.isActive, (value: boolean) => {
+      if (value) focus()
+    })
+
+    watch(() => props.width, () => {
+      resize()
+    })
+
     watch(() => props.diff, () => {
       clearDiff()
       showDiff()
     })
-
-    watch(() => props.isCompare, () => {
-      clearDiff()
-    })
-
-    // watch(() => props.value, (value: string, oldValue: string) => {
-    //   console.log('value', typeof value)
-    //   console.log('oldValue', typeof oldValue)
-    //   if (value !== undefined && oldValue === null) {
-    //     editor.value.setValue(props.value)
-    //   }
-    // })
 
     onMounted(() => {
       init()
