@@ -10,7 +10,7 @@
         class="ud-app-actions">
         <div
           class="ud-app-actions__item ud-app-actions__item--compare"
-          @click="isCompare = !isCompare">
+          @click="changeCompare">
           <!-- compare -->
           <ud-icon
             name="compare"
@@ -24,7 +24,9 @@
         </a>
       </div>
     </div>
-    <div class="ud-app__body">
+    <div
+      v-if="isMounted"
+      class="ud-app__body">
       <ud-editor-ace
         v-model:value="valueLeft"
         :is-compare="isCompare"
@@ -43,10 +45,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, reactive } from 'vue'
+import { defineComponent, ref, watch, reactive, onMounted, computed } from 'vue'
 import UdEditorAce from '@/components/UdEditorAce.vue'
 import UdIcon from '@/components/UdIcon.vue'
 import { DIFF } from '@/helpers/diff'
+import { LocalStorage } from '@/helpers/localStorage'
+import { EMPTY_MARKERS } from '@/helpers/contants'
 
 export default defineComponent({
   name: 'App',
@@ -55,34 +59,61 @@ export default defineComponent({
     UdIcon
   },
   setup() {
-    const editors: any = reactive({
-      left: {},
-      right: {}
-    })
     const valueLeft = ref<string>('')
     const valueRight = ref<string>('')
     const isCompare = ref<boolean>(false)
-    const markers = ref({
-      left: {
-        added: false,
-        data: []
-      },
-      right: {
-        added: true,
-        data: []
+    const isMounted = ref<boolean>(false)
+    const editors: any = reactive({
+      left: null,
+      right: null
+    })
+
+    function changeCompare() {
+      isCompare.value = !isCompare.value
+    }
+
+    function init() {
+      valueLeft.value = LocalStorage.getItem('valueLeft')
+      if (LocalStorage.getItem('isCompare') === 'true') {
+        isCompare.value = true
       }
+      if (isCompare.value === true) {
+        valueRight.value = LocalStorage.getItem('valueRight')
+      }
+    }
+
+    const markers = computed(() => {
+      if (isMounted.value === false || isCompare.value === false) return EMPTY_MARKERS
+      if (!valueLeft.value || !valueRight.value) return EMPTY_MARKERS
+      return DIFF.getDiff(editors, valueLeft.value, valueRight.value)
     })
 
     watch([() => valueLeft.value, () => valueRight.value], () => {
-      markers.value = DIFF.getDiff(editors, valueLeft.value, valueRight.value)
+      LocalStorage.setItem('valueLeft', valueLeft.value)
+      if (isCompare.value === true) {
+        LocalStorage.setItem('valueRight', valueRight.value)
+      } else {
+        LocalStorage.setItem('valueRight', '')
+      }
+    })
+
+    watch(() => isCompare.value, () => {
+      LocalStorage.setItem('isCompare', isCompare.value)
+    })
+
+    onMounted(() => {
+      init()
+      isMounted.value = true
     })
 
     return {
       valueLeft,
       valueRight,
       isCompare,
+      isMounted,
       editors,
-      markers
+      markers,
+      changeCompare
     }
   }
 })
@@ -104,7 +135,7 @@ export default defineComponent({
 
   @include e(header) {
     align-items: center;
-    border-bottom: 1px solid $color-grey;
+    border-bottom: 1px solid $color-grey-2;
     display: flex;
     height: $header-height;
     padding: 0.5rem 1rem;

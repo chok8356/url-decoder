@@ -100,6 +100,11 @@ export default defineComponent({
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
       if (props.isActive) focus()
+      console.log(props.value)
+      if (props.value !== undefined) {
+        editor.value.setValue(props.value)
+        editor.value.clearSelection()
+      }
       emit('init', editor.value)
     }
 
@@ -126,9 +131,9 @@ export default defineComponent({
     })
 
     function clearDiff() {
-      const markers = editor.value.session.getMarkers()
+      const markers = editor.value.getSession().getMarkers()
       for (const key in markers) {
-        editor.value.session.removeMarker(key)
+        editor.value.getSession().removeMarker(key)
       }
     }
 
@@ -137,7 +142,7 @@ export default defineComponent({
       const added = props.diff.added
       for (const range of props.diff.data) {
         const { startLine, startChar, endLine, endChar }: any = range
-        editor.value.session.addMarker(
+        editor.value.getSession().addMarker(
           new Range(startLine, startChar, endLine, endChar),
           added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
           'text'
@@ -153,6 +158,14 @@ export default defineComponent({
     watch(() => props.isCompare, () => {
       clearDiff()
     })
+
+    // watch(() => props.value, (value: string, oldValue: string) => {
+    //   console.log('value', typeof value)
+    //   console.log('oldValue', typeof oldValue)
+    //   if (value !== undefined && oldValue === null) {
+    //     editor.value.setValue(props.value)
+    //   }
+    // })
 
     onMounted(() => {
       init()
