@@ -1,11 +1,11 @@
 const Diff = require('diff')
 import { checkProperty } from '@/helpers/utils'
 import { EMPTY_MARKERS } from '@/helpers/contants'
+import cloneDeep from 'lodash/cloneDeep'
 
 // See {@link https://github.com/ace-diff/ace-diff/blob/master/src/index.js}
 export const DIFF = {
   getSingleDiffInfo(editor: any, offset: number, diffString: string) {
-    console.log(editor, editor.getSession())
     if (!editor) return
     const info = {
       startLine: 0,
@@ -53,7 +53,7 @@ export const DIFF = {
     if (!value1 || !value2) return []
     if (!editors.left || !editors.right) return []
     const diff = Diff.diffLines(value1, value2)
-    const markers: any = EMPTY_MARKERS
+    const markers: any = cloneDeep(EMPTY_MARKERS)
     const offset = {
       left: 0,
       right: 0
