@@ -2,6 +2,7 @@
 
 html,
 body {
+  font-size: $font-size;
   min-height: 100vh;
   overflow-x: hidden;
   width: 100vw;
@@ -9,4 +10,24 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+:root {
+  --color-primary: #{$color-primary};
+  --color-black: #{$color-black};
+  --color-white: #{$color-white};
+  --color-grey: #{$color-grey-dark};
+  --color-header: #{$color-header-dark};
+  --color-title: #{$color-title-dark};
+  --color-selection-added: #{$color-selection-added};
+  --color-selection-removed: #{$color-selection-removed};
+  --color-icon: #{$color-icon};
+}
+
+[data-theme="light"] {
+  --color-black: #{$color-white};
+  --color-white: #{$color-black};
+  --color-grey: #{$color-grey-light};
+  --color-header: #{$color-header-light};
+  --color-title: #{$color-title-light};
 }
