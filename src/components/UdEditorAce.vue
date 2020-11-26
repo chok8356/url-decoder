@@ -15,6 +15,7 @@ import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } fro
 import ace from 'ace-builds'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
+import 'ace-builds/src-min-noconflict/theme-monokai'
 import { formatting, wait } from '@/helpers/utils'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const JsBeautify = require('js-beautify')
@@ -43,6 +44,10 @@ export default defineComponent({
     isActive: {
       type: Boolean,
       default: true
+    },
+    isLight: {
+      type: Boolean,
+      default: true
     }
   },
   emits: ['init', 'update:value'],
@@ -53,7 +58,7 @@ export default defineComponent({
 
     const options = reactive({
       mode: 'ace/mode/json',
-      theme: Themes.light,
+      theme: props.isLight ? Themes.light : Themes.dark,
       fontSize: '12px',
       tabSize: 2,
       useWorker: false,
@@ -63,6 +68,21 @@ export default defineComponent({
       autoScrollEditorIntoView: true
     })
 
+    /**
+     * THEME
+     */
+    function changeTheme() {
+      if (!editor.value) return
+      editor.value.setTheme(props.isLight === true ? Themes.light : Themes.dark)
+    }
+
+    watch(() => props.isLight, () => {
+      changeTheme()
+    })
+
+    /**
+     * EDITOR VALUE
+     */
     function updateValue(str: string) {
       emit('update:value', str)
     }
@@ -89,6 +109,9 @@ export default defineComponent({
       editor.value.focus()
     }
 
+    /**
+     * EDITOR INSTANCE
+     */
     function init() {
       if (!container.value) return
       editor.value = ace.edit(container.value)
@@ -117,6 +140,9 @@ export default defineComponent({
       editor.value.resize(true)
     }
 
+    /**
+     * COMPARE DIFF
+     */
     function clearDiff() {
       const markers = editor.value.getSession().getMarkers()
       for (const key in markers) {
@@ -180,19 +206,22 @@ export default defineComponent({
 </style>
 
 <style lang="scss">
-@include b(editor-ace-diff-line-added) {
-  background-color: #d8f2ff;
-  border-bottom: 1px solid #a2d7f2;
-  border-top: 1px solid #a2d7f2;
+
+%editor-ace-diff {
+  border-radius: 0.125rem;
   position: absolute;
   z-index: 4;
 }
 
+@include b(editor-ace-diff-line-added) {
+  background-color: var(--color-selection-added);
+
+  @extend %editor-ace-diff;
+}
+
 @include b(editor-ace-diff-line-remove) {
-  background-color: #ffd8da;
-  border-bottom: 1px solid #ffd8da;
-  border-top: 1px solid #ffd8da;
-  position: absolute;
-  z-index: 4;
+  background-color: var(--color-selection-removed);
+
+  @extend %editor-ace-diff;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div
     class="ud-app"
-    :class="{'is-compare': isCompare === true}">
+    :class="{ 'is-compare': isCompare === true }">
     <div class="ud-app__header">
       <div class="ud-app__title">
         <h1>URL Decoder</h1>
@@ -16,6 +16,14 @@
             name="compare"
             :active="isCompare === true" />
         </div>
+        <div
+          class="ud-app-actions__item ud-app-actions__item--compare"
+          @click="isLight = !isLight">
+          <!-- light/dark mode -->
+          <ud-icon
+            :active="isLight === true"
+            name="sun" />
+        </div>
         <a
           class="ud-app-actions__item ud-app-actions__item--github"
           href="https://github.com/chok8356/url-decoder"
@@ -29,12 +37,14 @@
       <ud-editor-ace
         v-model:value="valueLeft"
         :diff="markers.left"
+        :is-light="isLight"
         :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
         @init="(editor) => editors.left = editor" />
       <ud-editor-ace
         v-show="isCompare"
         v-model:value="valueRight"
+        :is-light="isLight"
         :diff="markers.right"
         width="50%"
         @init="(editor) => editors.right = editor" />
@@ -60,11 +70,25 @@ export default defineComponent({
     const valueLeft = ref<string>(LocalStorage.getItem('valueLeft'))
     const valueRight = ref<string>(LocalStorage.getItem('valueRight'))
     const isCompare = ref<boolean>(false)
+    const isLight = ref<boolean>(false)
     const editors: any = reactive({
       left: null,
       right: null
     })
     const markers = ref(EMPTY_MARKERS)
+
+    function changeTheme() {
+      const theme = document.documentElement.dataset.theme
+      if (theme) { isCompare.value = !isCompare.value }
+    }
+
+    watch(() => isLight.value, () => {
+      if (isLight.value === true) {
+        document.documentElement.setAttribute('data-theme', 'light')
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark')
+      }
+    })
 
     function changeCompare() {
       isCompare.value = !isCompare.value
@@ -79,6 +103,9 @@ export default defineComponent({
     function init() {
       if (LocalStorage.getItem('isCompare') === 'true') {
         isCompare.value = true
+      }
+      if (LocalStorage.getItem('isLight') === 'true') {
+        isLight.value = true
       }
     }
 
@@ -97,6 +124,10 @@ export default defineComponent({
       LocalStorage.setItem('isCompare', isCompare.value)
     })
 
+    watch(() => isLight.value, () => {
+      LocalStorage.setItem('isLight', isLight.value)
+    })
+
     onMounted(() => {
       init()
     })
@@ -107,7 +138,9 @@ export default defineComponent({
       isCompare,
       editors,
       markers,
-      changeCompare
+      changeCompare,
+      isLight,
+      changeTheme
     }
   }
 })
@@ -115,6 +148,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @include b(app) {
+  // background-color: var(--color-black);
   // background: url('~@/assets/images/app-bg.png') center;
   color: #232323;
   display: flex;
@@ -129,19 +163,19 @@ export default defineComponent({
 
   @include e(header) {
     align-items: center;
-    border-bottom: 1px solid $color-grey-2;
+    background-color: var(--color-header);
+    border-bottom: 1px solid var(--color-grey);
+    box-shadow: 0 0 0.5rem -0.25rem rgba(0, 0, 0, 0.2);
     display: flex;
-    height: $header-height;
-    padding: 0.5rem 1rem;
-    position: fixed;
+    padding: 0.75rem 1.25rem;
     width: 100%;
+    z-index: 5;
   }
 
   @include e(body) {
     display: flex;
     flex-grow: 1;
     height: 100%;
-    padding-top: $header-height;
     width: 100%;
   }
 
@@ -149,7 +183,8 @@ export default defineComponent({
     flex-grow: 1;
 
     h1 {
-      font-size: 1.5rem;
+      color: var(--color-title);
+      font-size: 1.35rem;
       margin: 0;
     }
   }
@@ -167,15 +202,14 @@ export default defineComponent({
 
   @include e(item) {
     align-items: center;
-    background-color: $color-white;
-    color: $color-black;
+    color: var(--color-icon);
     cursor: pointer;
     display: inline-flex;
     width: auto;
 
     svg {
-      height: 1.5rem;
-      width: 1.5rem;
+      height: 1.25rem;
+      width: 1.25rem;
     }
   }
 }

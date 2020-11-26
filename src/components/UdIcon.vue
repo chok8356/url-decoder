@@ -51,10 +51,11 @@ export default defineComponent({
 
 <style lang="scss">
 @include b(icon) {
-  fill: currentColor;
+  color: currentColor;
+  fill: none;
 
   @include when(active) {
-    fill: $color-primary;
+    color: var(--color-primary);
   }
 }
 </style>
