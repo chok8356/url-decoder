@@ -1,24 +1,47 @@
 <template>
   <div
     class="ud-editor-ace"
-    :style="{
-      width: width
-    }">
+    :style="{ width: width }">
     <div
       ref="container"
       class="ud-editor-ace__container" />
+    <div class="ud-editor-ace__actions ud-editor-ace-actions">
+      <div
+        v-if="isShowDecodeButton"
+        class="ud-editor-ace-actions__item"
+        title="Decode">
+        <ud-icon
+          name="decode"
+          @click="decodeValue" />
+      </div>
+      <div
+        v-if="value"
+        class="ud-editor-ace-actions__item"
+        title="Encode">
+        <ud-icon
+          name="encode"
+          @click="encodeValue" />
+      </div>
+      <div
+        v-if="value"
+        class="ud-editor-ace-actions__item"
+        title="Format">
+        <ud-icon
+          name="format"
+          @click="formatValue" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { defineComponent, onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
+import UdIcon from '@/components/UdIcon.vue'
 import ace from 'ace-builds'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
 import 'ace-builds/src-min-noconflict/theme-monokai'
-import { formatting, wait } from '@/helpers/utils'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const JsBeautify = require('js-beautify')
+import { decodeAndFormat, wait, getBeautifyText, decode, encode, isEncoded } from '@/helpers/utils'
 
 const Range = ace.Range
 
@@ -28,6 +51,9 @@ export enum Themes {
 }
 export default defineComponent({
   name: 'UdEditorAce',
+  components: {
+    UdIcon
+  },
   props: {
     value: {
       type: String,
@@ -41,22 +67,28 @@ export default defineComponent({
       type: String,
       default: '100%'
     },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
     isLight: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   emits: ['init', 'update:value'],
   setup(props, { emit }) {
     const container: any = ref<HTMLElement | null>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const editor: any = reactive({})
+    const editor: any = ref({})
 
-    const options = reactive({
+    const isShowDecodeButton = computed(() => {
+      if (!props.value) return false
+      return isEncoded(props.value)
+    })
+
+    const isShowEncodeButton = computed(() => {
+      if (!props.value) return false
+      return !isEncoded(props.value)
+    })
+
+    const options = {
       mode: 'ace/mode/json',
       theme: props.isLight ? Themes.light : Themes.dark,
       fontSize: '12px',
@@ -66,7 +98,7 @@ export default defineComponent({
       showPrintMargin: false,
       selectionStyle: 'text',
       autoScrollEditorIntoView: true
-    })
+    }
 
     /**
      * THEME
@@ -87,20 +119,44 @@ export default defineComponent({
       emit('update:value', str)
     }
 
+    function getEditorValue() {
+      return editor.value.getValue()
+    }
+
+    function setEditorValue(value: string) {
+      editor.value.setValue(value)
+      editor.value.clearSelection()
+    }
+
     function change() {
       if (!editor.value) return
-      const value = editor.value.getValue()
+      const value = getEditorValue()
       updateValue(value)
     }
 
+    function formatValue() {
+      const text = getEditorValue()
+      const beautifyText = getBeautifyText(text)
+      setEditorValue(beautifyText)
+    }
+
+    function decodeValue() {
+      const text = getEditorValue()
+      const decodedText = decode(text)
+      setEditorValue(decodedText)
+    }
+
+    function encodeValue() {
+      const text = getEditorValue()
+      const encodedText = encode(text)
+      setEditorValue(encodedText)
+    }
+
     function onPaste(text: string) {
-      const formattedText = formatting(text)
+      const formattedText = decodeAndFormat(text)
       editor.value.execCommand('paste', formattedText)
-      const textOriginal = editor.value.getValue()
       // eslint-disable-next-line @typescript-eslint/camelcase
-      const beautifyText = JsBeautify(textOriginal, { indent_size: 2 })
-      editor.value.setValue(beautifyText)
-      editor.value.clearSelection()
+      formatValue()
     }
 
     function focus() {
@@ -122,7 +178,7 @@ export default defineComponent({
       }
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
-      if (props.isActive) focus()
+      focus()
       emit('init', editor.value)
     }
 
@@ -153,20 +209,16 @@ export default defineComponent({
 
     function showDiff() {
       if (!props.diff.data?.length) return
-      const added = props.diff.added
+      const extraClass = props.diff?.class ? `ud-editor-ace-diff-line--${props.diff?.class}` : ''
       for (const range of props.diff.data) {
         const { startLine, startChar, endLine, endChar }: any = range
         editor.value.getSession().addMarker(
           new Range(startLine, startChar, endLine, endChar),
-          added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
+          `ud-editor-ace-diff-line ${extraClass}`,
           'text'
         )
       }
     }
-
-    watch(() => props.isActive, (value: boolean) => {
-      if (value) focus()
-    })
 
     watch(() => props.width, () => {
       resize()
@@ -186,7 +238,12 @@ export default defineComponent({
     })
 
     return {
-      container
+      container,
+      formatValue,
+      decodeValue,
+      encodeValue,
+      isShowDecodeButton,
+      isShowEncodeButton
     }
   }
 })
@@ -196,11 +253,50 @@ export default defineComponent({
 @include b(editor-ace) {
   height: 100%;
   outline: none;
+  position: relative;
   width: 100%;
 
   @include e(container) {
     height: 100%;
     width: 100%;
+    z-index: 0;
+  }
+
+  @include e(actions) {
+    bottom: 0.5rem;
+    position: absolute;
+    right: 1.5rem;
+    z-index: 1;
+  }
+}
+
+@include b(editor-ace-actions) {
+  align-items: center;
+  display: inline-flex;
+  height: auto;
+  justify-content: flex-end;
+  margin-left: -0.5rem;
+  width: auto;
+
+  @include e(item) {
+    color: var(--color-icon);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1rem;
+    height: auto;
+    line-height: 1;
+    margin-left: 0.5em;
+    white-space: nowrap;
+    width: auto;
+
+    &:hover {
+      color: var(--color-primary);
+    }
+
+    svg {
+      height: 1.25rem;
+      width: 1.25rem;
+    }
   }
 }
 </style>
@@ -213,15 +309,13 @@ export default defineComponent({
   z-index: 4;
 }
 
-@include b(editor-ace-diff-line-added) {
-  background-color: var(--color-selection-added);
+@include b(editor-ace-diff-line) {
+  background-color: var(--color-selection);
 
   @extend %editor-ace-diff;
-}
 
-@include b(editor-ace-diff-line-remove) {
-  background-color: var(--color-selection-removed);
-
-  @extend %editor-ace-diff;
+  @include m(right) {
+    background-color: var(--color-selection-removed);
+  }
 }
 </style>

@@ -1,14 +1,51 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const JsBeautify = require('js-beautify')
+
+export function isEncoded(uri: string) {
+  if (!uri) return ''
+  try {
+    return uri !== decodeURIComponent(uri);
+  } catch (error) {
+    return false
+  }
+}
+
 export function decode(str: string): string {
   if (!str) return ''
   try {
-    return decodeURIComponent(str)
+    return decodeURIComponent(str);
   } catch (error) {
     console.error('Decode error', error)
     return str
   }
 }
 
-export function getUrlVars(url: string) {
+export function decodeFull(str: string): string {
+  if (!str) return ''
+  try {
+    if (isEncoded(str)) {
+      return decodeFull(decode(str));
+    } else {
+      return decode(str)
+    }
+  } catch (error) {
+    console.error('decodeFull error', error)
+    return str
+  }
+}
+
+
+export function encode(str: string): string {
+  if (!str) return ''
+  try {
+    return encodeURIComponent(str)
+  } catch (error) {
+    console.error('Encode error', error)
+    return str
+  }
+}
+
+export function getUrlParams(url: string) {
   let hash
   const result: any = {}
   const hashes = url.slice(url.indexOf('?') + 1).split('&')
@@ -48,13 +85,13 @@ export function stringify(json: any) {
   }
 }
 
-export function formatting(data: string) {
+export function decodeAndFormat(data: string) {
   try {
-    let text = decode(data)
+    let text = decodeFull(data)
     if (isValidJson(text)) {
       return text
     }
-    const vars = getUrlVars(text)
+    const vars = getUrlParams(text)
     if (vars && Object.keys(vars)?.length) {
       text = stringify(vars)
     }
@@ -67,6 +104,12 @@ export function formatting(data: string) {
     console.error('Formatting error', error)
     return data
   }
+}
+
+export function getBeautifyText(text: string) {
+  if (!text) return ''
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  return JsBeautify(text, { indent_size: 2 })
 }
 
 export function isValidJson(str: string) {
