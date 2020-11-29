@@ -11,6 +11,7 @@
         <!-- compare -->
         <div
           class="ud-app-actions__item ud-app-actions__item--compare"
+          title="Compare"
           @click="changeCompare">
           <ud-icon
             name="compare"
