@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2020-11-30
+### Added
+
+- Decode any level encoding on paste.
+- Separate buttons for Decode or Encode once.
+- Separate button for text formatting.
+
 ## [0.5.0] - 2020-11-26
 ### Added
 
