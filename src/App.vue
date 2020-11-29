@@ -8,22 +8,25 @@
       </div>
       <div
         class="ud-app-actions">
+        <!-- compare -->
         <div
           class="ud-app-actions__item ud-app-actions__item--compare"
           @click="changeCompare">
-          <!-- compare -->
           <ud-icon
             name="compare"
             :active="isCompare === true" />
         </div>
+
+        <!-- light/dark mode -->
         <div
           class="ud-app-actions__item ud-app-actions__item--compare"
           @click="isLight = !isLight">
-          <!-- light/dark mode -->
           <ud-icon
             :active="isLight === true"
             name="sun" />
         </div>
+
+        <!-- git link -->
         <a
           class="ud-app-actions__item ud-app-actions__item--github"
           href="https://github.com/chok8356/url-decoder"
@@ -34,18 +37,20 @@
     </div>
     <div
       class="ud-app__body">
+      <!-- left editor -->
       <ud-editor-ace
         v-model:value="valueLeft"
         :diff="markers.left"
         :is-light="isLight"
-        :is-active="!isCompare"
         :width="isCompare ? '50%' : '100%'"
         @init="(editor) => editors.left = editor" />
+
+      <!-- right editor -->
       <ud-editor-ace
         v-show="isCompare"
         v-model:value="valueRight"
-        :is-light="isLight"
         :diff="markers.right"
+        :is-light="isLight"
         width="50%"
         @init="(editor) => editors.right = editor" />
     </div>
@@ -71,16 +76,11 @@ export default defineComponent({
     const valueRight = ref<string>(LocalStorage.getItem('valueRight'))
     const isCompare = ref<boolean>(false)
     const isLight = ref<boolean>(false)
+    const markers = ref(EMPTY_MARKERS)
     const editors: any = reactive({
       left: null,
       right: null
     })
-    const markers = ref(EMPTY_MARKERS)
-
-    function changeTheme() {
-      const theme = document.documentElement.dataset.theme
-      if (theme) { isCompare.value = !isCompare.value }
-    }
 
     watch(() => isLight.value, () => {
       if (isLight.value === true) {
@@ -90,8 +90,17 @@ export default defineComponent({
       }
     })
 
+    function changeFocusWhenCompare(value: boolean) {
+      if (value === true) {
+        editors.right.focus()
+      } else {
+        editors.left.focus()
+      }
+    }
+
     function changeCompare() {
       isCompare.value = !isCompare.value
+      changeFocusWhenCompare(isCompare.value)
     }
 
     function getDiff() {
@@ -107,6 +116,8 @@ export default defineComponent({
       if (LocalStorage.getItem('isLight') === 'true') {
         isLight.value = true
       }
+      editors.left.focus()
+      editors.right.blur()
     }
 
     watch([() => valueLeft.value, () => valueRight.value], () => {
@@ -139,8 +150,7 @@ export default defineComponent({
       editors,
       markers,
       changeCompare,
-      isLight,
-      changeTheme
+      isLight
     }
   }
 })
@@ -148,8 +158,6 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @include b(app) {
-  // background-color: var(--color-black);
-  // background: url('~@/assets/images/app-bg.png') center;
   color: #232323;
   display: flex;
   flex-direction: column;

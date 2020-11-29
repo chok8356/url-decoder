@@ -1,9 +1,7 @@
 <template>
   <div
     class="ud-editor-ace"
-    :style="{
-      width: width
-    }">
+    :style="{ width: width }">
     <div
       ref="container"
       class="ud-editor-ace__container" />
@@ -11,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { defineComponent, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import ace from 'ace-builds'
 import 'ace-builds/src-min-noconflict/mode-json'
 import 'ace-builds/src-min-noconflict/theme-xcode'
@@ -41,22 +39,18 @@ export default defineComponent({
       type: String,
       default: '100%'
     },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
     isLight: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
   emits: ['init', 'update:value'],
   setup(props, { emit }) {
     const container: any = ref<HTMLElement | null>(null)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const editor: any = reactive({})
+    const editor: any = ref({})
 
-    const options = reactive({
+    const options = {
       mode: 'ace/mode/json',
       theme: props.isLight ? Themes.light : Themes.dark,
       fontSize: '12px',
@@ -66,7 +60,7 @@ export default defineComponent({
       showPrintMargin: false,
       selectionStyle: 'text',
       autoScrollEditorIntoView: true
-    })
+    }
 
     /**
      * THEME
@@ -122,7 +116,7 @@ export default defineComponent({
       }
       editor.value.on('change', change)
       editor.value.onPaste = onPaste
-      if (props.isActive) focus()
+      focus()
       emit('init', editor.value)
     }
 
@@ -153,20 +147,16 @@ export default defineComponent({
 
     function showDiff() {
       if (!props.diff.data?.length) return
-      const added = props.diff.added
+      const extraClass = props.diff?.class ? `ud-editor-ace-diff-line--${props.diff?.class}` : ''
       for (const range of props.diff.data) {
         const { startLine, startChar, endLine, endChar }: any = range
         editor.value.getSession().addMarker(
           new Range(startLine, startChar, endLine, endChar),
-          added ? 'ud-editor-ace-diff-line-added' : 'ud-editor-ace-diff-line-remove',
+          `ud-editor-ace-diff-line ${extraClass}`,
           'text'
         )
       }
     }
-
-    watch(() => props.isActive, (value: boolean) => {
-      if (value) focus()
-    })
 
     watch(() => props.width, () => {
       resize()
@@ -213,15 +203,13 @@ export default defineComponent({
   z-index: 4;
 }
 
-@include b(editor-ace-diff-line-added) {
-  background-color: var(--color-selection-added);
+@include b(editor-ace-diff-line) {
+  background-color: var(--color-selection);
 
   @extend %editor-ace-diff;
-}
 
-@include b(editor-ace-diff-line-remove) {
-  background-color: var(--color-selection-removed);
-
-  @extend %editor-ace-diff;
+  @include m(right) {
+    background-color: var(--color-selection-removed);
+  }
 }
 </style>
