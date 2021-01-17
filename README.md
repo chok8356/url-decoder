@@ -1,3 +1,3 @@
 # URL Decoder
 
-It is a simple url decoder with automatic formatting and comparison of two text variants.
+It is a simple URL decoder with auto-formatting and compares two text variants (JSON, String, or something else).
