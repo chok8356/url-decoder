@@ -1,4 +1,7 @@
 const rules = {
+  'no-underscore-dangle': 0,
+  'import/no-unresolved': 0,
+  'import/prefer-default-export': 0,
   'import/order': ['error', {
     alphabetize: {
       order: 'asc',
@@ -6,6 +9,7 @@ const rules = {
     },
   }],
   'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+  'import/extensions': 0,
 };
 
 module.exports = {

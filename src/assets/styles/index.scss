@@ -6,13 +6,21 @@
   --font-family: #{$font-family};
   --font-size: #{$font-size}px;
 
-  // Colors
   @each $name, $color in $colors {
     --color-#{$name}: #{$color};
   }
 
-  //// Colors RGB
-  //@each $name, $color in $colors {
-  //  --color-#{$name}-rgb: #{hex-to-rgb($color)};
-  //}
+  @each $name, $color in $colors {
+    --color-#{$name}-rgb: #{hex-to-rgb($color)};
+  }
+}
+
+[data-theme="light"] {
+  @each $name, $color in $colors-light {
+    --color-#{$name}: #{$color};
+  }
+
+  @each $name, $color in $colors-light {
+    --color-#{$name}-rgb: #{hex-to-rgb($color)};
+  }
 }

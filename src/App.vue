@@ -5,15 +5,61 @@
         URL Decoder
       </h1>
       <div :class="$style.actions">
-        <!--icon-->
-        <Icon />
+        <Icon
+          :class="$style.icon"
+          :icon="CompareIcon"
+          title="Compare" />
+        <Icon
+          :class="[
+            $style.icon,
+            {
+              [$style.iconActive]: isLight
+            }
+          ]"
+          :icon="SunIcon"
+          title="Theme"
+          @click="changeTheme" />
+        <Icon
+          :class="$style.icon"
+          :icon="GithubIcon"
+          title="Github"
+          @click="openGithubPage" />
       </div>
     </header>
   </div>
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
+import CompareIcon from './assets/icons/compare.svg?raw';
+import GithubIcon from './assets/icons/github.svg?raw';
+import SunIcon from './assets/icons/sun.svg?raw';
 import Icon from './components/IconSvg.vue';
+import { LocalStorage } from './helpers/LocalStorage';
+
+const isLight = ref<boolean>(false);
+
+const changeTheme = () => {
+  isLight.value = !isLight.value;
+};
+
+watch(() => isLight.value, () => {
+  if (isLight.value) {
+    document.documentElement.setAttribute('data-theme', 'light');
+    LocalStorage.put('theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    LocalStorage.delete('theme');
+  }
+});
+
+const openGithubPage = () => {
+  window.open('https://github.com/chok8356/url-decoder', '_blank');
+};
+
+onMounted(() => {
+  if (LocalStorage.get('theme') === 'light') isLight.value = true;
+});
 
 </script>
 
@@ -40,7 +86,7 @@ body {
 .header {
   align-items: center;
   background-color: var(--color-grey);
-  box-shadow: 0 0 0.5rem -0.25rem rgb(0 0 0 / 20%);
+  box-shadow: 0 0 0.5rem -0.25rem rgb(0 0 0 / 25%);
   display: flex;
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
@@ -55,7 +101,26 @@ body {
 }
 
 .actions {
-  display: inline-grid;
-  grid-gap: 0.5rem;
+  display: inline-flex;
+  grid-gap: 1rem;
+}
+
+.link {
+  display: inline-flex;
+  width: auto;
+}
+
+.icon {
+  color: var(--color-light-grey);
+  cursor: pointer;
+  width: 1.25rem;
+
+  &:hover {
+    filter: brightness(125%);
+  }
+
+  &Active {
+    color: var(--color-blue);
+  }
 }
 </style>
