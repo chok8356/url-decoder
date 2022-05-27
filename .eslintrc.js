@@ -56,6 +56,7 @@ module.exports = {
       ],
       rules: {
         ...rules,
+        'vue/multi-word-component-names': 0,
         'vue/no-undef-components': ['error'],
         'vue/no-duplicate-attr-inheritance': ['error'],
         'vue/no-empty-component-block': ['error'],

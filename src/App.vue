@@ -26,6 +26,9 @@
           @click="openGithubPage" />
       </div>
     </header>
+    <main>
+      <Editor />
+    </main>
   </div>
 </template>
 
@@ -34,7 +37,8 @@ import { onMounted, ref, watch } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
-import Icon from './components/IconSvg.vue';
+import Editor from './components/Editor.vue';
+import Icon from './components/Icon.vue';
 import { LocalStorage } from './helpers/LocalStorage';
 
 const isLight = ref<boolean>(false);

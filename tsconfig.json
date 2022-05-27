@@ -3,6 +3,7 @@
     "allowJs": true,
     "target": "esnext",
     "useDefineForClassFields": true,
+    "skipDefaultLibCheck": true,
     "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
