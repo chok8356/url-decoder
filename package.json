@@ -8,7 +8,8 @@
     "lint": "npm run lint:code && npm run lint:styles",
     "lint:fix": "npm run lint:code -- --fix && npm run lint:styles -- --fix",
     "lint:code": "eslint . --ext .js,.ts,.vue",
-    "lint:styles": "stylelint ./**/*.{css,scss,vue}"
+    "lint:styles": "stylelint ./**/*.{css,scss,vue}",
+    "pre-commit": "lint-staged"
   },
   "dependencies": {
     "vue": "^3.2.36"
