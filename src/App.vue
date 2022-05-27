@@ -5,13 +5,15 @@
         URL Decoder
       </h1>
       <div :class="$style.actions">
-        actions
+        <!--icon-->
+        <Icon />
       </div>
     </header>
   </div>
 </template>
 
 <script setup lang="ts">
+import Icon from './components/IconSvg.vue';
 
 </script>
 
