@@ -111,7 +111,6 @@ module.exports = {
         'vue/padding-line-between-blocks': ['error', 'always'],
         'vue/prefer-separate-static-class': ['error'],
         'vue/prefer-true-attribute-shorthand': ['error', 'always'],
-        'vue/require-emit-validator': ['error'],
       },
     },
   ],

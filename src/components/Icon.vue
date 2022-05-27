@@ -22,6 +22,7 @@ withDefaults(defineProps<{icon: string}>(), {
   line-height: 1;
   max-height: 100%;
   max-width: 100%;
+  user-select: none;
   width: auto;
 
   svg {

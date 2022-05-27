@@ -1,35 +1,35 @@
 <template>
-  <div :class="$style.app">
-    <header :class="$style.header">
-      <h1 :class="$style.title">
-        URL Decoder
-      </h1>
-      <div :class="$style.actions">
-        <Icon
-          :class="$style.icon"
-          :icon="CompareIcon"
-          title="Compare" />
-        <Icon
-          :class="[
-            $style.icon,
-            {
-              [$style.iconActive]: isLight
-            }
-          ]"
-          :icon="SunIcon"
-          title="Theme"
-          @click="changeTheme" />
-        <Icon
-          :class="$style.icon"
-          :icon="GithubIcon"
-          title="Github"
-          @click="openGithubPage" />
-      </div>
-    </header>
-    <main>
-      <Editor />
-    </main>
-  </div>
+  <header :class="$style.header">
+    <h1 :class="$style.title">
+      URL Decoder
+    </h1>
+    <div :class="$style.actions">
+      <Icon
+        :class="$style.icon"
+        :icon="CompareIcon"
+        title="Compare" />
+      <Icon
+        :class="[
+          $style.icon,
+          {
+            [$style.iconActive]: isLight
+          }
+        ]"
+        :icon="SunIcon"
+        title="Theme"
+        @click="changeTheme" />
+      <Icon
+        :class="$style.icon"
+        :icon="GithubIcon"
+        title="Github"
+        @click="openGithubPage" />
+    </div>
+  </header>
+  <main :class="$style.main">
+    <Editor
+      v-model:value="valueLeft"
+      :dark="!isLight" />
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -41,6 +41,7 @@ import Editor from './components/Editor.vue';
 import Icon from './components/Icon.vue';
 import { LocalStorage } from './helpers/LocalStorage';
 
+const valueLeft = ref<string>(LocalStorage.get('valueLeft'));
 const isLight = ref<boolean>(false);
 
 const changeTheme = () => {
@@ -67,7 +68,7 @@ onMounted(() => {
 
 </script>
 
-<style lang="scss" module>
+<style lang="scss">
 html,
 body {
   margin: 0;
@@ -79,23 +80,33 @@ body {
   box-sizing: border-box;
 }
 
-.app {
+#app {
+  display: grid;
   font-family: var(--font-family);
   font-size: var(--font-size);
+  grid-auto-rows: auto 1fr;
   height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
   width: 100vw;
 }
+</style>
 
+<style lang="scss" module>
 .header {
   align-items: center;
   background-color: var(--color-grey);
-  box-shadow: 0 0 0.5rem -0.25rem rgb(0 0 0 / 25%);
+  box-shadow: 0 0 0.25rem 0.1rem rgb(0 0 0 / 25%);
   display: flex;
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
   width: 100%;
   z-index: 1;
+}
+
+.main {
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
 }
 
 .title {
@@ -127,4 +138,5 @@ body {
     color: var(--color-blue);
   }
 }
+
 </style>

@@ -16,7 +16,9 @@
   },
   "devDependencies": {
     "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/lang-javascript": "^0.20.0",
     "@codemirror/state": "^0.20.0",
+    "@codemirror/theme-one-dark": "^0.20.0",
     "@codemirror/view": "^0.20.6",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",

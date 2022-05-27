@@ -1,58 +1,99 @@
 <template>
-  <div :class="$style.editors">
-    <div ref="editor1" />
-    <div ref="editor2" />
-  </div>
+  <div
+    ref="div"
+    :class="$style.editor" />
 </template>
 
 <script setup lang="ts">
 import { EditorState, basicSetup } from '@codemirror/basic-setup';
-import { Transaction, Annotation } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
-import { onMounted, ref } from 'vue';
+import { javascript } from '@codemirror/lang-javascript';
+import { Extension, StateEffect } from '@codemirror/state';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView, ViewUpdate } from '@codemirror/view';
+import {
+  computed, onMounted, ref, watch,
+} from 'vue';
 
-const editor1 = ref<HTMLDivElement>();
-const editor2 = ref<HTMLDivElement>();
+interface Props {
+  value: string,
+  dark: boolean
+}
 
-const views = ref<EditorView[]>([]);
-const syncAnnotation = ref(Annotation.define<boolean>());
+const props = withDefaults(defineProps<Props>(), {
+  value: '',
+  dark: false,
+});
 
-const state = ref<EditorState>();
+const emit = defineEmits(['update:value']);
 
-const syncDispatch = (from: number, to: number) => (tr: Transaction) => {
-  views.value[from].update([tr]);
-  if (!tr.changes.empty && !tr.annotation(syncAnnotation.value)) {
-    views.value[to].dispatch({
-      changes: tr.changes,
-      annotations: syncAnnotation.value.of(true),
-    });
-  }
+const themes = {
+  dark: oneDark,
+  font: EditorView.theme({
+    '&': {
+      fontSize: '9pt',
+    },
+    '.cm-gutters': {
+      border: 'none',
+      background: 'transparent',
+    },
+  }),
 };
 
-onMounted(() => {
-  state.value = EditorState.create({
-    doc: 'The document\nis\nshared',
-    extensions: basicSetup,
-  });
+const div = ref<HTMLDivElement>();
 
-  views.value.push(
-    new EditorView({
-      state: state.value,
-      parent: editor1.value,
-      dispatch: syncDispatch(0, 1),
+const view = ref<EditorView>(new EditorView());
+
+const extensions = computed<Extension[]>(() => {
+  const result = [
+    basicSetup,
+    javascript(),
+    EditorView.lineWrapping,
+    EditorView.updateListener.of((update: ViewUpdate) => {
+      emit('update:value', update.state.doc.toString());
     }),
-    new EditorView({
-      state: state.value,
-      parent: editor2.value,
-      dispatch: syncDispatch(1, 0),
+  ];
+  if (props.dark) result.push(themes.dark);
+  result.push(themes.font);
+  return result;
+});
+
+watch(() => props.value, () => {
+  view.value.dispatch({
+    changes: {
+      from: 0,
+      to: view.value.state.doc.length,
+      insert: props.value,
+    },
+  });
+});
+
+watch(() => extensions.value, () => {
+  view.value.dispatch({
+    effects: StateEffect.reconfigure.of(extensions.value),
+  });
+});
+
+onMounted(async () => {
+  view.value = new EditorView({
+    state: EditorState.create({
+      doc: props.value,
+      extensions: extensions.value,
     }),
-  );
+    parent: div.value,
+  });
 });
 </script>
 
 <style lang="scss" module>
-.editors {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.editor {
+  height: 100%;
+  overflow: auto;
+  width: 100%;
+
+  & > div {
+    height: 100%;
+    width: 100%;
+  }
 }
+
 </style>
