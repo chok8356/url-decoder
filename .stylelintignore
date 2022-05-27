@@ -1,0 +1,14 @@
+.DS_Store
+node_modules
+lib
+dist
+
+.idea
+.vscode
+
+coverage
+
+src/assets/icons/font/*
+
+!.storybook
+
