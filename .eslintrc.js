@@ -1,4 +1,5 @@
 const rules = {
+  'no-use-before-define': 0,
   'no-underscore-dangle': 0,
   'import/no-unresolved': 0,
   'import/prefer-default-export': 0,

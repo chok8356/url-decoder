@@ -7,11 +7,11 @@
 <script setup lang="ts">
 import { EditorState, basicSetup } from '@codemirror/basic-setup';
 import { javascript } from '@codemirror/lang-javascript';
-import { Extension, StateEffect } from '@codemirror/state';
+import { EditorSelection, Extension, StateEffect } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView, ViewUpdate } from '@codemirror/view';
 import {
-  computed, onMounted, ref, watch,
+  computed, onBeforeUnmount, onMounted, ref, watch,
 } from 'vue';
 
 interface Props {
@@ -26,62 +26,76 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits(['update:value']);
 
-const themes = {
-  dark: oneDark,
-  font: EditorView.theme({
-    '&': {
-      fontSize: '9pt',
-    },
-    '.cm-gutters': {
-      border: 'none',
-      background: 'transparent',
-    },
-  }),
-};
-
 const div = ref<HTMLDivElement>();
 
-const view = ref<EditorView>(new EditorView());
+const editor = ref<EditorView>(new EditorView());
 
-const extensions = computed<Extension[]>(() => {
-  const result = [
-    basicSetup,
-    javascript(),
-    EditorView.lineWrapping,
-    EditorView.updateListener.of((update: ViewUpdate) => {
-      emit('update:value', update.state.doc.toString());
-    }),
-  ];
-  if (props.dark) result.push(themes.dark);
-  result.push(themes.font);
-  return result;
-});
+watch(() => props.value, async (current) => {
+  const { length } = editor.value.state.doc;
 
-watch(() => props.value, () => {
-  view.value.dispatch({
+  let selection = editor.value.state.selection.ranges[0].from;
+  if (selection > current.length) selection = current.length;
+
+  editor.value.dispatch({
     changes: {
       from: 0,
-      to: view.value.state.doc.length,
-      insert: props.value,
+      to: length,
+      insert: current,
     },
+    selection: EditorSelection.single(selection),
   });
 });
 
-watch(() => extensions.value, () => {
-  view.value.dispatch({
-    effects: StateEffect.reconfigure.of(extensions.value),
-  });
-});
-
-onMounted(async () => {
-  view.value = new EditorView({
+const init = () => {
+  const view = new EditorView({
     state: EditorState.create({
       doc: props.value,
       extensions: extensions.value,
     }),
     parent: div.value,
   });
+  editor.value = view;
+};
+
+const destroy = () => editor.value.destroy();
+
+/** Extensions */
+const extensions = computed<Extension[]>(() => {
+  const result = [
+    basicSetup,
+    javascript(),
+    EditorView.lineWrapping,
+    EditorView.theme({
+      '&': {
+        fontSize: '9pt',
+      },
+      '.cm-gutters': {
+        border: 'none',
+        background: 'transparent',
+      },
+    }),
+    EditorView.updateListener.of((update: ViewUpdate) => {
+      emit('update:value', update.state.doc.toString());
+    }),
+  ];
+  if (props.dark) result.push(oneDark);
+  return result;
 });
+
+watch(() => extensions.value, () => {
+  editor.value.dispatch({
+    effects: StateEffect.reconfigure.of(extensions.value),
+  });
+});
+
+onMounted(async () => {
+  init();
+});
+
+onBeforeUnmount(() => {
+  destroy();
+});
+
 </script>
 
 <style lang="scss" module>

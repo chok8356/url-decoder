@@ -5,27 +5,23 @@
     </h1>
     <div :class="$style.actions">
       <Icon
-        :class="$style.icon"
-        :icon="CompareIcon"
-        title="Compare" />
-      <Icon
+        v-for="(action, index) in actions"
+        :key="index"
         :class="[
           $style.icon,
           {
-            [$style.iconActive]: isLight
+            [$style.iconActive]: action.active
           }
         ]"
-        :icon="SunIcon"
-        title="Theme"
-        @click="changeTheme" />
-      <Icon
-        :class="$style.icon"
-        :icon="GithubIcon"
-        title="Github"
-        @click="openGithubPage" />
+        :icon="action.icon"
+        :title="action.title"
+        @click="action.action ? action.action() : null" />
     </div>
   </header>
   <main :class="$style.main">
+    <button @click="valueLeft = '111111'">
+      test
+    </button>
     <Editor
       v-model:value="valueLeft"
       :dark="!isLight" />
@@ -33,7 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import {
+  computed, onMounted, ref, watch,
+} from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
@@ -43,10 +41,6 @@ import { LocalStorage } from './helpers/LocalStorage';
 
 const valueLeft = ref<string>(LocalStorage.get('valueLeft'));
 const isLight = ref<boolean>(false);
-
-const changeTheme = () => {
-  isLight.value = !isLight.value;
-};
 
 watch(() => isLight.value, () => {
   if (isLight.value) {
@@ -58,12 +52,40 @@ watch(() => isLight.value, () => {
   }
 });
 
+const changeTheme = () => {
+  isLight.value = !isLight.value;
+};
+
 const openGithubPage = () => {
   window.open('https://github.com/chok8356/url-decoder', '_blank');
 };
 
-onMounted(() => {
+const actions = computed(() => [
+  {
+    title: 'Compare',
+    icon: CompareIcon,
+  },
+  {
+    title: 'Theme',
+    icon: SunIcon,
+    active: isLight.value,
+    action: changeTheme,
+  },
+  {
+    title: 'Github',
+    icon: GithubIcon,
+    action: openGithubPage,
+  },
+]);
+
+onMounted(async () => {
   if (LocalStorage.get('theme') === 'light') isLight.value = true;
+
+  // await new Promise((resolve) => {
+  //   setTimeout(() => resolve(true), 2000);
+  // });
+  //
+  // valueLeft.value = '111';
 });
 
 </script>
@@ -95,7 +117,7 @@ body {
 .header {
   align-items: center;
   background-color: var(--color-grey);
-  box-shadow: 0 0 0.25rem 0.1rem rgb(0 0 0 / 25%);
+  box-shadow: 0 0 0.25rem 0.1rem rgb(0 0 0 / 20%);
   display: flex;
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
