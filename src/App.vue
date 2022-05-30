@@ -115,17 +115,6 @@ onMounted(async () => {
 </script>
 
 <style lang="scss">
-html,
-body {
-  margin: 0;
-  overflow: hidden;
-  padding: 0;
-}
-
-* {
-  box-sizing: border-box;
-}
-
 #app {
   display: grid;
   font-family: var(--font-family);
