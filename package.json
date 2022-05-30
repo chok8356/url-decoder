@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/commands": "^0.20.0",
     "@codemirror/lang-javascript": "^0.20.0",
     "@codemirror/state": "^0.20.0",
     "@codemirror/theme-one-dark": "^0.20.0",

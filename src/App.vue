@@ -19,18 +19,23 @@
     </div>
   </header>
   <main :class="$style.main">
-    <button @click="valueLeft = '111111'">
-      test
-    </button>
     <Editor
-      v-model:value="valueLeft"
-      :dark="!isLight" />
+      ref="editorLeft"
+      :dark="!isLight"
+      :value="valueLeft"
+      @update:valu="onUpdateValueLeft" />
+    <Editor
+      v-show="isCompare"
+      ref="editorRight"
+      :dark="!isLight"
+      :value="valueRight"
+      @update:valu="onUpdateValueRight" />
   </main>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref, watch,
+  computed, nextTick, onMounted, ref, watchEffect,
 } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
@@ -39,21 +44,26 @@ import Editor from './components/Editor.vue';
 import Icon from './components/Icon.vue';
 import { LocalStorage } from './helpers/LocalStorage';
 
-const valueLeft = ref<string>(LocalStorage.get('valueLeft'));
-const isLight = ref<boolean>(false);
+const isLight = ref<boolean>(LocalStorage.get('isLight'));
+const isCompare = ref<boolean>(LocalStorage.get('isCompare'));
 
-watch(() => isLight.value, () => {
-  if (isLight.value) {
-    document.documentElement.setAttribute('data-theme', 'light');
-    LocalStorage.put('theme', 'light');
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-    LocalStorage.delete('theme');
-  }
-});
+const editorLeft = ref<InstanceType<typeof Editor> | null>(null);
+const editorRight = ref<InstanceType<typeof Editor> | null>(null);
+
+const valueLeft = ref<string>(LocalStorage.get('valueLeft'));
+const valueRight = ref<string>(LocalStorage.get('valueRight'));
+
+const changeCompare = async () => {
+  isCompare.value = !isCompare.value;
+  await nextTick();
+  const editor = isCompare.value ? editorRight.value : editorLeft.value;
+  editor?.focus();
+  LocalStorage.put('isCompare', isCompare.value);
+};
 
 const changeTheme = () => {
   isLight.value = !isLight.value;
+  LocalStorage.put('isLight', isLight.value);
 };
 
 const openGithubPage = () => {
@@ -64,6 +74,8 @@ const actions = computed(() => [
   {
     title: 'Compare',
     icon: CompareIcon,
+    active: isCompare.value,
+    action: changeCompare,
   },
   {
     title: 'Theme',
@@ -78,14 +90,26 @@ const actions = computed(() => [
   },
 ]);
 
-onMounted(async () => {
-  if (LocalStorage.get('theme') === 'light') isLight.value = true;
+const onUpdateValueLeft = (value: string) => {
+  valueLeft.value = value;
+  LocalStorage.put('valueLeft', valueRight.value);
+};
 
-  // await new Promise((resolve) => {
-  //   setTimeout(() => resolve(true), 2000);
-  // });
-  //
-  // valueLeft.value = '111';
+const onUpdateValueRight = (value: string) => {
+  valueRight.value = value;
+  LocalStorage.put('valueRight', valueRight.value);
+};
+
+watchEffect(() => {
+  if (isLight.value) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+});
+
+onMounted(async () => {
+  editorLeft.value?.focus();
 });
 
 </script>
@@ -126,6 +150,7 @@ body {
 }
 
 .main {
+  display: flex;
   height: 100%;
   overflow: hidden;
   width: 100%;

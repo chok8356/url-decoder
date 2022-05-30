@@ -6,10 +6,11 @@
 
 <script setup lang="ts">
 import { EditorState, basicSetup } from '@codemirror/basic-setup';
+import { insertTab } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { EditorSelection, Extension, StateEffect } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { EditorView, ViewUpdate } from '@codemirror/view';
+import { EditorView, ViewUpdate, keymap } from '@codemirror/view';
 import {
   computed, onBeforeUnmount, onMounted, ref, watch,
 } from 'vue';
@@ -30,6 +31,53 @@ const div = ref<HTMLDivElement>();
 
 const editor = ref<EditorView>(new EditorView());
 
+// Init methods
+const init = () => {
+  editor.value = new EditorView({
+    state: EditorState.create({
+      doc: props.value,
+      extensions: extensions.value,
+    }),
+    parent: div.value,
+  });
+};
+
+const destroy = () => editor.value.destroy();
+
+// Extensions
+const extensions = computed<Extension[]>(() => {
+  const result = [
+    basicSetup,
+    javascript(),
+    keymap.of([{
+      key: 'Tab',
+      run: insertTab,
+    }]),
+    EditorState.tabSize.of(2),
+    EditorView.lineWrapping,
+    EditorView.theme({
+      '&': {
+        fontSize: '9pt',
+      },
+      '.cm-gutters': {
+        border: 'none',
+        background: 'var(--color-grey)',
+      },
+    }),
+    EditorView.updateListener.of((update: ViewUpdate) => {
+      emit('update:value', update.state.doc.toString());
+    }),
+  ];
+  if (props.dark) result.push(oneDark);
+  return result;
+});
+
+// Focus
+const focus = () => {
+  editor.value.focus();
+};
+
+// Watchers
 watch(() => props.value, async (current) => {
   const { length } = editor.value.state.doc;
 
@@ -46,42 +94,6 @@ watch(() => props.value, async (current) => {
   });
 });
 
-const init = () => {
-  const view = new EditorView({
-    state: EditorState.create({
-      doc: props.value,
-      extensions: extensions.value,
-    }),
-    parent: div.value,
-  });
-  editor.value = view;
-};
-
-const destroy = () => editor.value.destroy();
-
-/** Extensions */
-const extensions = computed<Extension[]>(() => {
-  const result = [
-    basicSetup,
-    javascript(),
-    EditorView.lineWrapping,
-    EditorView.theme({
-      '&': {
-        fontSize: '9pt',
-      },
-      '.cm-gutters': {
-        border: 'none',
-        background: 'transparent',
-      },
-    }),
-    EditorView.updateListener.of((update: ViewUpdate) => {
-      emit('update:value', update.state.doc.toString());
-    }),
-  ];
-  if (props.dark) result.push(oneDark);
-  return result;
-});
-
 watch(() => extensions.value, () => {
   editor.value.dispatch({
     effects: StateEffect.reconfigure.of(extensions.value),
@@ -94,6 +106,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   destroy();
+});
+
+defineExpose({
+  focus,
 });
 
 </script>
