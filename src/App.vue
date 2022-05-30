@@ -20,16 +20,16 @@
   </header>
   <main :class="$style.main">
     <Editor
-      ref="editorLeft"
+      ref="leftEditor"
       :dark="!isLight"
-      :value="valueLeft"
-      @update:valu="onUpdateValueLeft" />
+      :value="leftValue"
+      @update:value="onUpdateValueLeft" />
     <Editor
       v-show="isCompare"
-      ref="editorRight"
+      ref="rightEditor"
       :dark="!isLight"
-      :value="valueRight"
-      @update:valu="onUpdateValueRight" />
+      :value="rightValue"
+      @update:value="onUpdateValueRight" />
   </main>
 </template>
 
@@ -47,16 +47,16 @@ import { LocalStorage } from './helpers/LocalStorage';
 const isLight = ref<boolean>(LocalStorage.get('isLight'));
 const isCompare = ref<boolean>(LocalStorage.get('isCompare'));
 
-const editorLeft = ref<InstanceType<typeof Editor> | null>(null);
-const editorRight = ref<InstanceType<typeof Editor> | null>(null);
+const leftValue = ref<string>(LocalStorage.get('leftValue'));
+const leftEditor = ref<InstanceType<typeof Editor> | null>(null);
 
-const valueLeft = ref<string>(LocalStorage.get('valueLeft'));
-const valueRight = ref<string>(LocalStorage.get('valueRight'));
+const rightValue = ref<string>(LocalStorage.get('rightValue'));
+const rightEditor = ref<InstanceType<typeof Editor> | null>(null);
 
 const changeCompare = async () => {
   isCompare.value = !isCompare.value;
   await nextTick();
-  const editor = isCompare.value ? editorRight.value : editorLeft.value;
+  const editor = isCompare.value ? rightEditor.value : leftEditor.value;
   editor?.focus();
   LocalStorage.put('isCompare', isCompare.value);
 };
@@ -91,13 +91,13 @@ const actions = computed(() => [
 ]);
 
 const onUpdateValueLeft = (value: string) => {
-  valueLeft.value = value;
-  LocalStorage.put('valueLeft', valueRight.value);
+  leftValue.value = value;
+  LocalStorage.put('leftValue', leftValue.value);
 };
 
 const onUpdateValueRight = (value: string) => {
-  valueRight.value = value;
-  LocalStorage.put('valueRight', valueRight.value);
+  rightValue.value = value;
+  LocalStorage.put('rightValue', rightValue.value);
 };
 
 watchEffect(() => {
@@ -109,7 +109,7 @@ watchEffect(() => {
 });
 
 onMounted(async () => {
-  editorLeft.value?.focus();
+  leftEditor.value?.focus();
 });
 
 </script>
