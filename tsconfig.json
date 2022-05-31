@@ -12,14 +12,17 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "lib": [
       "esnext",
       "dom"
     ],
     "skipLibCheck": true,
-    "types": [
-      "node",
-    ]
   },
   "include": [
     "**/*.js",
@@ -29,10 +32,5 @@
   "exclude": [
     "node_modules",
     "dist",
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ]
 }

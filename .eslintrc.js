@@ -1,16 +1,25 @@
 const rules = {
-  'no-use-before-define': 0,
+  'no-continue': 0,
+  'no-restricted-syntax': 0,
+  'no-constructor-return': 0,
   'no-underscore-dangle': 0,
-  'import/no-unresolved': 0,
+  'no-use-before-define': 0,
+  'consistent-return': 0,
+  'class-methods-use-this': 0,
+  'no-param-reassign': ['error', {
+    props: false,
+  }],
+  'arrow-body-style': 0,
   'import/prefer-default-export': 0,
+  'import/no-extraneous-dependencies': 0,
+  'import/extensions': 0,
+  'import/no-unresolved': 0,
   'import/order': ['error', {
     alphabetize: {
       order: 'asc',
       caseInsensitive: true,
     },
   }],
-  'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-  'import/extensions': 0,
 };
 
 module.exports = {
@@ -41,7 +50,11 @@ module.exports = {
         'plugin:@typescript-eslint/recommended',
         'airbnb-typescript/base',
       ],
-      rules,
+      rules: {
+        ...rules,
+        '@typescript-eslint/no-loop-func': 0,
+        '@typescript-eslint/no-explicit-any': 0,
+      },
     },
     // Vue
     {

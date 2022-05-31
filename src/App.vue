@@ -22,12 +22,14 @@
     <Editor
       ref="leftEditor"
       :dark="!isLight"
+      :text="rightValue"
       :value="leftValue"
       @update:value="onUpdateValueLeft" />
     <Editor
       v-show="isCompare"
       ref="rightEditor"
       :dark="!isLight"
+      :text="leftValue"
       :value="rightValue"
       @update:value="onUpdateValueRight" />
   </main>
@@ -40,7 +42,7 @@ import {
 import CompareIcon from './assets/icons/compare.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
-import Editor from './components/Editor.vue';
+import Editor from './components/Editor/Editor.vue';
 import Icon from './components/Icon.vue';
 import { LocalStorage } from './helpers/LocalStorage';
 
@@ -111,7 +113,6 @@ watchEffect(() => {
 onMounted(async () => {
   leftEditor.value?.focus();
 });
-
 </script>
 
 <style lang="scss">

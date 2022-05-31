@@ -1,3 +1,4 @@
+import { viteCommonjs, esbuildCommonjs } from '@originjs/vite-plugin-commonjs';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 
@@ -13,11 +14,19 @@ export default defineConfig((args) => {
           compilerOptions: {},
         },
       }),
+      viteCommonjs(),
     ],
     css: {
       modules: {
         localsConvention: 'camelCaseOnly',
         generateScopedName,
+      },
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        plugins: [
+          esbuildCommonjs(['diff', 'diff_match_patch']),
+        ],
       },
     },
   };
