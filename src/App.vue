@@ -40,6 +40,7 @@ import {
   computed, nextTick, onMounted, ref, watchEffect,
 } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
+import FormatIcon from './assets/icons/format.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
 import Editor from './components/Editor/Editor.vue';
@@ -55,6 +56,8 @@ const leftEditor = ref<InstanceType<typeof Editor> | null>(null);
 const rightValue = ref<string>(LocalStorage.get('rightValue'));
 const rightEditor = ref<InstanceType<typeof Editor> | null>(null);
 
+const beautify = require('js-beautify').js;
+
 const changeCompare = async () => {
   isCompare.value = !isCompare.value;
   await nextTick();
@@ -68,6 +71,11 @@ const changeTheme = () => {
   LocalStorage.put('isLight', isLight.value);
 };
 
+const makeFormatting = () => {
+  leftValue.value = beautify(leftValue.value, { indent_size: 2 });
+  rightValue.value = beautify(rightValue.value, { indent_size: 2 });
+};
+
 const openGithubPage = () => {
   window.open('https://github.com/chok8356/url-decoder', '_blank');
 };
@@ -78,6 +86,11 @@ const actions = computed(() => [
     icon: CompareIcon,
     active: isCompare.value,
     action: changeCompare,
+  },
+  {
+    title: 'Make Formatting',
+    icon: FormatIcon,
+    action: makeFormatting,
   },
   {
     title: 'Theme',

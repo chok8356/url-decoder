@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { EditorState, basicSetup } from '@codemirror/basic-setup';
-import { insertTab } from '@codemirror/commands';
+import { indentMore, indentLess } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { EditorSelection, Extension, StateEffect } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -17,12 +17,6 @@ import {
 
 import { diff } from './extensions/diff';
 
-interface Props {
-  value: string,
-  text?: string,
-  dark: boolean
-}
-
 const props = withDefaults(defineProps<Props>(), {
   value: '',
   text: '',
@@ -30,6 +24,12 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits(['update:value']);
+
+interface Props {
+  value: string,
+  text?: string,
+  dark: boolean
+}
 
 const div = ref<HTMLDivElement>();
 
@@ -55,7 +55,13 @@ const extensions = computed<Extension[]>(() => {
     javascript(),
     keymap.of([{
       key: 'Tab',
-      run: insertTab,
+      run: indentMore,
+      preventDefault: true,
+    }]),
+    keymap.of([{
+      key: 'Shift-Tab',
+      run: indentLess,
+      preventDefault: true,
     }]),
     EditorState.tabSize.of(2),
     EditorView.lineWrapping,

@@ -48,7 +48,7 @@ export class ChangeSetDecorations {
     return [
       EditorView.theme({
         '.cm-diff': {
-          background: 'rgba(255 235 60 / 20%)',
+          background: 'rgb(60 255 147 / 25%)',
         },
       }),
       ViewPlugin.define(
