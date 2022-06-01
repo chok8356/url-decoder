@@ -1,16 +1,27 @@
 import { ChangeSet } from '@codemirror/state';
 
-export type Change = {
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Diff = require('diff');
+
+type Change = {
   value: string,
   added: boolean,
   removed: boolean,
   count: number
 };
 
-export const diffToChangeSet = (diffs: Change[]) => {
+type Range = {
+  from: number,
+  to: number,
+  insert: string,
+};
+
+export const getDiffChangeSet = (src: string, dst: string): ChangeSet => {
+  const diffs: Change[] = Diff.diffChars(src, dst);
+
   let offset = 0;
 
-  const changes: any = [];
+  const changes: Range[] = [];
 
   for (const diff of diffs) {
     const {

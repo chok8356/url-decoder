@@ -22,14 +22,14 @@
     <Editor
       ref="leftEditor"
       :dark="!isLight"
-      :text="rightValue"
+      :text="isCompare ? rightValue : ''"
       :value="leftValue"
       @update:value="onUpdateValueLeft" />
     <Editor
       v-show="isCompare"
       ref="rightEditor"
       :dark="!isLight"
-      :text="leftValue"
+      :text="isCompare ? leftValue : ''"
       :value="rightValue"
       @update:value="onUpdateValueRight" />
   </main>

@@ -10,7 +10,6 @@ export class LocalStorage {
     return data ? JSON.parse(data) : undefined;
   }
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   static put(key: string, value: any) {
     localStorage.setItem(getPrefix(key), JSON.stringify(value));
     return true;
