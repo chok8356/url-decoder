@@ -4,25 +4,17 @@
       URL Decoder
     </h1>
     <div :class="$style.actions">
-      <template
+      <Icon
         v-for="(action, index) in actions"
-        :key="index">
-        <div
-          :class="[
-            $style.action,
-            {
-              [$style.actionActive]: action.active
-            }
-          ]"
-          @click="action.action ? action.action() : null">
-          <Icon
-            v-if="action.icon"
-            :class="$style.actionIcon"
-            :icon="action.icon"
-            :title="action.title" />
-          {{ action.text }}
-        </div>
-      </template>
+        :key="index"
+        :class="[
+          $style.icon, {
+            [$style.iconActive]: action.active
+          }
+        ]"
+        :icon="action.icon"
+        :title="action.title"
+        @click="action.action ? action.action() : null" />
     </div>
   </header>
   <main :class="$style.main">
@@ -51,6 +43,8 @@ import {
   computed, nextTick, onMounted, ref, watchEffect,
 } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
+import DecodeIcon from './assets/icons/decode.svg?raw';
+import FormatPageIcon from './assets/icons/format-page.svg?raw';
 import FormatIcon from './assets/icons/format.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
@@ -105,27 +99,27 @@ const openGithubPage = () => {
 
 const actions = computed(() => [
   {
-    title: 'Auto decode on paste',
-    text: 'Decode',
-    active: isAutoDecode.value,
-    action: changeAutoDecode,
-  },
-  {
-    title: 'Auto formatting on paste',
-    text: 'Formatting',
-    active: isAutoFormatting.value,
-    action: changeAutoFormatting,
-  },
-  {
     title: 'Compare',
     icon: CompareIcon,
     active: isCompare.value,
     action: changeCompare,
   },
   {
-    title: 'Make formatting',
-    icon: FormatIcon,
+    title: 'Make formatting all pge',
+    icon: FormatPageIcon,
     action: makeFormatting,
+  },
+  {
+    title: 'Auto decode pasted text',
+    icon: DecodeIcon,
+    active: isAutoDecode.value,
+    action: changeAutoDecode,
+  },
+  {
+    title: 'Auto formatting pasted text',
+    icon: FormatIcon,
+    active: isAutoFormatting.value,
+    action: changeAutoFormatting,
   },
   {
     title: 'Theme',
@@ -205,14 +199,10 @@ onMounted(async () => {
   grid-gap: 1rem;
 }
 
-.action {
-  align-items: center;
+.icon {
   color: var(--color-light-grey);
   cursor: pointer;
-  display: inline-flex;
-  font-size: 18px;
-  grid-gap: 8px;
-  text-transform: uppercase;
+  width: 1.25rem;
 
   &:hover {
     filter: brightness(125%);
@@ -220,11 +210,6 @@ onMounted(async () => {
 
   &Active {
     color: var(--color-blue);
-  }
-
-  &Icon {
-    cursor: pointer;
-    width: 1.25rem;
   }
 }
 

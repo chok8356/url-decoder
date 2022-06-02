@@ -1,12 +1,15 @@
 <template>
   <div :class="$style.root">
     <div :class="$style.actions">
-      <Icon
-        v-for="(action, index) in actions"
-        :key="index"
-        :class="$style.icon"
-        :icon="action.icon"
-        :title="action.title" />
+      <template v-for="(action, index) in actions">
+        <Icon
+          v-if="action.show || action.show === undefined"
+          :key="index"
+          :class="$style.icon"
+          :icon="action.icon"
+          :title="action.title"
+          @click="action.action ? action.action() : null" />
+      </template>
     </div>
     <div
       ref="div"
@@ -26,7 +29,7 @@ import {
 } from 'vue';
 import DecodeIcon from '../../assets/icons/decode.svg?raw';
 import EncodeIcon from '../../assets/icons/encode.svg?raw';
-import FormatIcon from '../../assets/icons/format.svg?raw';
+import { isCanBeDecoded } from '../../utils/isCanBeDecoded';
 import Icon from '../Icon.vue';
 
 import { diff } from './extensions/diff';
@@ -108,21 +111,29 @@ const extensions = computed<Extension[]>(() => {
           pasted = decodeURIComponent(pasted);
         }
 
+        if (props.formatting) {
+          pasted = beautify(pasted, { indent_size: 2 });
+        }
+
         view.dispatch(view.state.replaceSelection(pasted));
 
-        if (props.formatting) {
-          const { doc } = editor.value.state;
-          const { length } = doc;
-          const text = beautify(doc.toString() || pasted, { indent_size: 2 });
-
-          view.dispatch({
-            changes: {
-              from: 0,
-              to: length,
-              insert: text,
-            },
-          });
-        }
+        // TODO: add new functionality
+        // if (props.formatting) {
+        //   const { doc } = editor.value.state;
+        //   const { length } = doc;
+        //   const text = beautify(doc.toString() || pasted, { indent_size: 2 });
+        //
+        //   const { from } = editor.value.state.selection.ranges[0];
+        //
+        //   view.dispatch({
+        //     changes: {
+        //       from: 0,
+        //       to: length,
+        //       insert: text,
+        //     },
+        //     selection: EditorSelection.single(from + text.length - length),
+        //   });
+        // }
       },
     }),
   ];
@@ -130,33 +141,47 @@ const extensions = computed<Extension[]>(() => {
   return result;
 });
 
-// Focus
 const focus = () => {
   editor.value.focus();
 };
 
-// Actions
 const actions = computed(() => [
   {
     title: 'Decode',
     icon: DecodeIcon,
     action: decode,
+    show: isCanBeDecoded(props.value),
   },
   {
     title: 'Encode',
     icon: EncodeIcon,
     action: encode,
   },
-  {
-    title: 'Format',
-    icon: FormatIcon,
-    action: format,
-  },
 ]);
 
-const decode = () => {};
-const encode = () => {};
-const format = () => {};
+const decode = () => {
+  const { length } = editor.value.state.doc;
+
+  editor.value.dispatch({
+    changes: {
+      from: 0,
+      to: length,
+      insert: decodeURIComponent(props.value),
+    },
+  });
+};
+
+const encode = () => {
+  const { length } = editor.value.state.doc;
+
+  editor.value.dispatch({
+    changes: {
+      from: 0,
+      to: length,
+      insert: encodeURIComponent(props.value),
+    },
+  });
+};
 
 // Watchers
 watch(() => props.value, async (current) => {
@@ -210,7 +235,7 @@ defineExpose({
   grid-gap: 0.5rem;
   padding: 0.25rem;
   position: absolute;
-  right: 0;
+  right: 0.5rem;
   width: auto;
   z-index: 1;
 }

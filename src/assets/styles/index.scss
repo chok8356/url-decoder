@@ -11,6 +11,18 @@ body {
 
 * {
   box-sizing: border-box;
+  scrollbar-color: var(--color-pale-grey) transparent;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--color-pale-grey);
+    border: 0 none transparent;
+    border-radius: 0;
+  }
 }
 
 :root {
