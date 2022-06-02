@@ -4,24 +4,33 @@
       URL Decoder
     </h1>
     <div :class="$style.actions">
-      <Icon
+      <template
         v-for="(action, index) in actions"
-        :key="index"
-        :class="[
-          $style.icon,
-          {
-            [$style.iconActive]: action.active
-          }
-        ]"
-        :icon="action.icon"
-        :title="action.title"
-        @click="action.action ? action.action() : null" />
+        :key="index">
+        <div
+          :class="[
+            $style.action,
+            {
+              [$style.actionActive]: action.active
+            }
+          ]"
+          @click="action.action ? action.action() : null">
+          <Icon
+            v-if="action.icon"
+            :class="$style.actionIcon"
+            :icon="action.icon"
+            :title="action.title" />
+          {{ action.text }}
+        </div>
+      </template>
     </div>
   </header>
   <main :class="$style.main">
     <Editor
       ref="leftEditor"
       :dark="!isLight"
+      :decode="isAutoDecode"
+      :formatting="isAutoFormatting"
       :text="isCompare ? rightValue : ''"
       :value="leftValue"
       @update:value="onUpdateValueLeft" />
@@ -29,6 +38,8 @@
       v-show="isCompare"
       ref="rightEditor"
       :dark="!isLight"
+      :decode="isAutoDecode"
+      :formatting="isAutoFormatting"
       :text="isCompare ? leftValue : ''"
       :value="rightValue"
       @update:value="onUpdateValueRight" />
@@ -45,10 +56,12 @@ import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
 import Editor from './components/Editor/Editor.vue';
 import Icon from './components/Icon.vue';
-import { LocalStorage } from './helpers/LocalStorage';
+import { LocalStorage } from './utils/LocalStorage';
 
 const isLight = ref<boolean>(LocalStorage.get('isLight'));
 const isCompare = ref<boolean>(LocalStorage.get('isCompare'));
+const isAutoDecode = ref<boolean>(LocalStorage.get('isAutoDecode'));
+const isAutoFormatting = ref<boolean>(LocalStorage.get('isAutoFormatting'));
 
 const leftValue = ref<string>(LocalStorage.get('leftValue'));
 const leftEditor = ref<InstanceType<typeof Editor> | null>(null);
@@ -71,6 +84,16 @@ const changeTheme = () => {
   LocalStorage.put('isLight', isLight.value);
 };
 
+const changeAutoDecode = () => {
+  isAutoDecode.value = !isAutoDecode.value;
+  LocalStorage.put('isAutoDecode', isAutoDecode.value);
+};
+
+const changeAutoFormatting = () => {
+  isAutoFormatting.value = !isAutoFormatting.value;
+  LocalStorage.put('isAutoFormatting', isAutoFormatting.value);
+};
+
 const makeFormatting = () => {
   leftValue.value = beautify(leftValue.value, { indent_size: 2 });
   rightValue.value = beautify(rightValue.value, { indent_size: 2 });
@@ -82,13 +105,25 @@ const openGithubPage = () => {
 
 const actions = computed(() => [
   {
+    title: 'Auto decode on paste',
+    text: 'Decode',
+    active: isAutoDecode.value,
+    action: changeAutoDecode,
+  },
+  {
+    title: 'Auto formatting on paste',
+    text: 'Formatting',
+    active: isAutoFormatting.value,
+    action: changeAutoFormatting,
+  },
+  {
     title: 'Compare',
     icon: CompareIcon,
     active: isCompare.value,
     action: changeCompare,
   },
   {
-    title: 'Make Formatting',
+    title: 'Make formatting',
     icon: FormatIcon,
     action: makeFormatting,
   },
@@ -170,15 +205,14 @@ onMounted(async () => {
   grid-gap: 1rem;
 }
 
-.link {
-  display: inline-flex;
-  width: auto;
-}
-
-.icon {
+.action {
+  align-items: center;
   color: var(--color-light-grey);
   cursor: pointer;
-  width: 1.25rem;
+  display: inline-flex;
+  font-size: 18px;
+  grid-gap: 8px;
+  text-transform: uppercase;
 
   &:hover {
     filter: brightness(125%);
@@ -187,6 +221,16 @@ onMounted(async () => {
   &Active {
     color: var(--color-blue);
   }
+
+  &Icon {
+    cursor: pointer;
+    width: 1.25rem;
+  }
+}
+
+.link {
+  display: inline-flex;
+  width: auto;
 }
 
 </style>
