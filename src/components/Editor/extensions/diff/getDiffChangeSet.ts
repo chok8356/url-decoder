@@ -1,14 +1,9 @@
 import { ChangeSet } from '@codemirror/state';
+import DiffMatchPatch from 'diff-match-patch';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Diff = require('diff');
+const d = new DiffMatchPatch();
 
-type Change = {
-  value: string,
-  added: boolean,
-  removed: boolean,
-  count: number
-};
+type Change = [number, string];
 
 type Range = {
   from: number,
@@ -17,16 +12,20 @@ type Range = {
 };
 
 export const getDiffChangeSet = (src: string, dst: string): ChangeSet => {
-  const diffs: Change[] = Diff.diffChars(src, dst);
+  const diffs: Change[] = d.diff_main(src, dst);
+  d.diff_cleanupSemantic(diffs);
 
   let offset = 0;
 
   const changes: Range[] = [];
 
   for (const diff of diffs) {
-    const {
-      value, added, removed, count,
-    } = diff;
+    const [type, value] = diff;
+
+    const added = type === 1;
+    const removed = type === -1;
+    const count = value.length;
+
     if (added) {
       changes.push({
         from: offset,

@@ -72,74 +72,71 @@ const init = () => {
 const destroy = () => editor.value.destroy();
 
 // Extensions
-const extensions = computed<Extension[]>(() => {
-  const result = [
-    basicSetup,
-    javascript(),
-    keymap.of([{
-      key: 'Tab',
-      run: indentMore,
-      preventDefault: true,
-    }]),
-    keymap.of([{
-      key: 'Shift-Tab',
-      run: indentLess,
-      preventDefault: true,
-    }]),
-    EditorState.tabSize.of(2),
-    EditorView.lineWrapping,
-    EditorView.theme({
-      '&': {
-        fontSize: '9pt',
-      },
-      '.cm-gutters': {
-        border: 'none',
-        background: 'var(--color-grey)',
-      },
-    }),
-    EditorView.updateListener.of((view: ViewUpdate) => {
-      emit('update:value', view.state.doc.toString());
-    }),
-    diff(props.text),
-    EditorView.domEventHandlers({
-      paste(e: ClipboardEvent, view: EditorView) {
-        e.preventDefault();
+const extensions = computed<Extension[]>(() => [
+  basicSetup,
+  javascript(),
+  keymap.of([{
+    key: 'Tab',
+    run: indentMore,
+    preventDefault: true,
+  }]),
+  keymap.of([{
+    key: 'Shift-Tab',
+    run: indentLess,
+    preventDefault: true,
+  }]),
+  EditorState.tabSize.of(2),
+  EditorView.lineWrapping,
+  EditorView.theme({
+    '&': {
+      fontSize: '9pt',
+    },
+    '.cm-gutters': {
+      border: 'none',
+      background: 'var(--color-grey)',
+    },
+  }),
+  EditorView.updateListener.of((view: ViewUpdate) => {
+    emit('update:value', view.state.doc.toString());
+  }),
+  EditorView.domEventHandlers({
+    paste(e: ClipboardEvent, view: EditorView) {
+      e.preventDefault();
 
-        let pasted = e.clipboardData?.getData('Text') || '';
+      let pasted = e.clipboardData?.getData('Text') || '';
 
-        if (props.decode) {
-          pasted = decodeURIComponent(pasted);
-        }
+      if (props.decode) {
+        pasted = decodeURIComponent(pasted);
+      }
 
-        if (props.formatting) {
-          pasted = beautify(pasted, { indent_size: 2 });
-        }
+      if (props.formatting) {
+        pasted = beautify(pasted, { indent_size: 2 });
+      }
 
-        view.dispatch(view.state.replaceSelection(pasted));
+      view.dispatch(view.state.replaceSelection(pasted));
 
-        // TODO: add new functionality
-        // if (props.formatting) {
-        //   const { doc } = editor.value.state;
-        //   const { length } = doc;
-        //   const text = beautify(doc.toString() || pasted, { indent_size: 2 });
-        //
-        //   const { from } = editor.value.state.selection.ranges[0];
-        //
-        //   view.dispatch({
-        //     changes: {
-        //       from: 0,
-        //       to: length,
-        //       insert: text,
-        //     },
-        //     selection: EditorSelection.single(from + text.length - length),
-        //   });
-        // }
-      },
-    }),
-  ];
-  if (props.dark) result.push(oneDark);
-  return result;
-});
+      // TODO: add new functionality
+      // if (props.formatting) {
+      //   const { doc } = editor.value.state;
+      //   const { length } = doc;
+      //   const text = beautify(doc.toString() || pasted, { indent_size: 2 });
+      //
+      //   const { from } = editor.value.state.selection.ranges[0];
+      //
+      //   view.dispatch({
+      //     changes: {
+      //       from: 0,
+      //       to: length,
+      //       insert: text,
+      //     },
+      //     selection: EditorSelection.single(from + text.length - length),
+      //   });
+      // }
+    },
+  }),
+  props.dark ? oneDark : [],
+  props.text ? diff(props.text) : [],
+]);
 
 const focus = () => {
   editor.value.focus();
@@ -230,12 +227,12 @@ defineExpose({
 }
 
 .actions {
-  bottom: 0;
+  bottom: 0.25rem;
   display: inline-flex;
   grid-gap: 0.5rem;
   padding: 0.25rem;
   position: absolute;
-  right: 0.5rem;
+  right: 0.75rem;
   width: auto;
   z-index: 1;
 }
