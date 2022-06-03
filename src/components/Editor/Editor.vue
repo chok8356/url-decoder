@@ -58,19 +58,6 @@ const div = ref<HTMLDivElement>();
 
 const editor = ref<EditorView>(new EditorView());
 
-// Init methods
-const init = () => {
-  editor.value = new EditorView({
-    state: EditorState.create({
-      doc: props.value,
-      extensions: extensions.value,
-    }),
-    parent: div.value,
-  });
-};
-
-const destroy = () => editor.value.destroy();
-
 // Extensions
 const extensions = computed<Extension[]>(() => [
   basicSetup,
@@ -138,10 +125,6 @@ const extensions = computed<Extension[]>(() => [
   props.text ? diff(props.text) : [],
 ]);
 
-const focus = () => {
-  editor.value.focus();
-};
-
 const actions = computed(() => [
   {
     title: 'Decode',
@@ -157,27 +140,11 @@ const actions = computed(() => [
 ]);
 
 const decode = () => {
-  const { length } = editor.value.state.doc;
-
-  editor.value.dispatch({
-    changes: {
-      from: 0,
-      to: length,
-      insert: decodeURIComponent(props.value),
-    },
-  });
+  emit('update:value', decodeURIComponent(props.value));
 };
 
 const encode = () => {
-  const { length } = editor.value.state.doc;
-
-  editor.value.dispatch({
-    changes: {
-      from: 0,
-      to: length,
-      insert: encodeURIComponent(props.value),
-    },
-  });
+  emit('update:value', encodeURIComponent(props.value));
 };
 
 // Watchers
@@ -204,16 +171,17 @@ watch(() => extensions.value, () => {
 });
 
 onMounted(async () => {
-  init();
+  editor.value = new EditorView({
+    state: EditorState.create({
+      doc: props.value,
+      extensions: extensions.value,
+    }),
+    parent: div.value,
+  });
 });
 
 onBeforeUnmount(() => {
-  destroy();
-});
-
-defineExpose({
-  focus,
-  editor,
+  editor.value.destroy();
 });
 
 </script>

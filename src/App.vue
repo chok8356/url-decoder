@@ -4,46 +4,48 @@
       URL Decoder
     </h1>
     <div :class="$style.actions">
-      <Icon
-        v-for="(action, index) in actions"
+      <div
+        v-for="(actionGroup, index) in actions"
         :key="index"
-        :class="[
-          $style.icon, {
-            [$style.iconActive]: action.active
-          }
-        ]"
-        :icon="action.icon"
-        :title="action.title"
-        @click="action.action ? action.action() : null" />
+        :class="$style.actionsGroup">
+        <Icon
+          v-for="(action, actionIndex) in actionGroup"
+          :key="actionIndex"
+          :class="[
+            $style.icon, {
+              [$style.iconActive]: action.active
+            }
+          ]"
+          :icon="action.icon"
+          :title="action.title"
+          @click="action.action ? action.action() : null" />
+      </div>
     </div>
   </header>
   <main :class="$style.main">
     <Editor
-      ref="leftEditor"
-      :dark="!isLight"
-      :decode="isAutoDecode"
-      :formatting="isAutoFormatting"
-      :text="isCompare ? rightValue : ''"
-      :value="leftValue"
-      @update:value="onUpdateValueLeft" />
+      v-model:value="text.left"
+      :dark="!settings.light"
+      :decode="settings.decode"
+      :formatting="settings.formatting"
+      :text="settings.compare ? text.right : ''" />
     <Editor
-      v-show="isCompare"
-      ref="rightEditor"
-      :dark="!isLight"
-      :decode="isAutoDecode"
-      :formatting="isAutoFormatting"
-      :text="isCompare ? leftValue : ''"
-      :value="rightValue"
-      @update:value="onUpdateValueRight" />
+      v-if="settings.compare"
+      v-model:value="text.right"
+      :dark="!settings.light"
+      :decode="settings.decode"
+      :formatting="settings.formatting"
+      :text="settings.compare ? text.left : ''" />
   </main>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, nextTick, onMounted, ref, watchEffect,
+  computed, onMounted, reactive, watch,
 } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
 import DecodeIcon from './assets/icons/decode.svg?raw';
+import ExtractIcon from './assets/icons/extract.svg?raw';
 import FormatPageIcon from './assets/icons/format-page.svg?raw';
 import FormatIcon from './assets/icons/format.svg?raw';
 import GithubIcon from './assets/icons/github.svg?raw';
@@ -52,45 +54,32 @@ import Editor from './components/Editor/Editor.vue';
 import Icon from './components/Icon.vue';
 import { LocalStorage } from './utils/LocalStorage';
 
-const isLight = ref<boolean>(LocalStorage.get('isLight'));
-const isCompare = ref<boolean>(LocalStorage.get('isCompare'));
-const isAutoDecode = ref<boolean>(LocalStorage.get('isAutoDecode'));
-const isAutoFormatting = ref<boolean>(LocalStorage.get('isAutoFormatting'));
+interface Settings {
+  light: boolean,
+  compare: boolean,
+  decode: boolean,
+  formatting: boolean,
+  extractParam: boolean,
+}
 
-const leftValue = ref<string>(LocalStorage.get('leftValue'));
-const leftEditor = ref<InstanceType<typeof Editor> | null>(null);
+const settings = reactive<Settings>({
+  light: false,
+  compare: false,
+  decode: false,
+  formatting: false,
+  extractParam: false,
+});
 
-const rightValue = ref<string>(LocalStorage.get('rightValue'));
-const rightEditor = ref<InstanceType<typeof Editor> | null>(null);
+const text = reactive({
+  left: '',
+  right: '',
+});
 
 const beautify = require('js-beautify').js;
 
-const changeCompare = async () => {
-  isCompare.value = !isCompare.value;
-  await nextTick();
-  const editor = isCompare.value ? rightEditor.value : leftEditor.value;
-  editor?.focus();
-  LocalStorage.put('isCompare', isCompare.value);
-};
-
-const changeTheme = () => {
-  isLight.value = !isLight.value;
-  LocalStorage.put('isLight', isLight.value);
-};
-
-const changeAutoDecode = () => {
-  isAutoDecode.value = !isAutoDecode.value;
-  LocalStorage.put('isAutoDecode', isAutoDecode.value);
-};
-
-const changeAutoFormatting = () => {
-  isAutoFormatting.value = !isAutoFormatting.value;
-  LocalStorage.put('isAutoFormatting', isAutoFormatting.value);
-};
-
 const makeFormatting = () => {
-  leftValue.value = beautify(leftValue.value, { indent_size: 2 });
-  rightValue.value = beautify(rightValue.value, { indent_size: 2 });
+  text.left = beautify(text.left, { indent_size: 2 });
+  text.right = beautify(text.right, { indent_size: 2 });
 };
 
 const openGithubPage = () => {
@@ -98,62 +87,70 @@ const openGithubPage = () => {
 };
 
 const actions = computed(() => [
-  {
-    title: 'Compare',
-    icon: CompareIcon,
-    active: isCompare.value,
-    action: changeCompare,
-  },
-  {
-    title: 'Make formatting all pge',
-    icon: FormatPageIcon,
-    action: makeFormatting,
-  },
-  {
-    title: 'Auto decode pasted text',
-    icon: DecodeIcon,
-    active: isAutoDecode.value,
-    action: changeAutoDecode,
-  },
-  {
-    title: 'Auto formatting pasted text',
-    icon: FormatIcon,
-    active: isAutoFormatting.value,
-    action: changeAutoFormatting,
-  },
-  {
-    title: 'Theme',
-    icon: SunIcon,
-    active: isLight.value,
-    action: changeTheme,
-  },
-  {
-    title: 'Github',
-    icon: GithubIcon,
-    action: openGithubPage,
-  },
+  [
+    {
+      title: 'Compare',
+      icon: CompareIcon,
+      active: settings.compare,
+      action: () => settings.compare = !settings.compare,
+    },
+  ],
+  [
+    {
+      title: 'Auto decode pasted text',
+      icon: DecodeIcon,
+      active: settings.decode,
+      action: () => settings.decode = !settings.decode,
+    },
+    {
+      title: 'Auto formatting pasted text',
+      icon: FormatIcon,
+      active: settings.formatting,
+      action: () => settings.formatting = !settings.formatting,
+    },
+    {
+      title: 'Auto extract params from pasted text',
+      icon: ExtractIcon,
+      active: settings.extractParam,
+      action: () => settings.extractParam = !settings.extractParam,
+    },
+  ],
+  [
+    {
+      title: 'Format all pages',
+      icon: FormatPageIcon,
+      action: makeFormatting,
+    },
+    {
+      title: 'Theme',
+      icon: SunIcon,
+      active: settings.light,
+      action: () => settings.light = !settings.light,
+    },
+    {
+      title: 'Github',
+      icon: GithubIcon,
+      action: openGithubPage,
+    },
+  ],
 ]);
 
-const onUpdateValueLeft = (value: string) => {
-  leftValue.value = value;
-  LocalStorage.put('leftValue', leftValue.value);
-};
-
-const onUpdateValueRight = (value: string) => {
-  rightValue.value = value;
-  LocalStorage.put('rightValue', rightValue.value);
-};
-
-watchEffect(() => {
-  if (isLight.value) {
+watch(() => settings, () => {
+  LocalStorage.put('settings', settings);
+  if (settings.light) {
     document.documentElement.setAttribute('data-theme', 'light');
   } else {
     document.documentElement.removeAttribute('data-theme');
   }
-});
+}, { deep: true });
 
-onMounted(async () => {
-  leftEditor.value?.focus();
+watch(() => text, () => {
+  LocalStorage.put('text', text);
+}, { deep: true });
+
+onMounted(() => {
+  Object.assign(settings, reactive(LocalStorage.get('settings')));
+  Object.assign(text, reactive(LocalStorage.get('text')));
 });
 </script>
 
@@ -175,6 +172,7 @@ onMounted(async () => {
   background-color: var(--color-grey);
   box-shadow: 0 0 0.25rem 0.1rem rgb(0 0 0 / 20%);
   display: flex;
+  grid-gap: 1rem;
   justify-content: space-between;
   padding: 0.75rem 1.25rem;
   width: 100%;
@@ -190,13 +188,24 @@ onMounted(async () => {
 
 .title {
   color: var(--color-white);
+  display: block;
   font-size: 1.35rem;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .actions {
   display: inline-flex;
-  grid-gap: 1rem;
+  grid-gap: 2rem;
+  width: auto;
+
+  &Group {
+    display: inline-flex;
+    grid-gap: 1rem;
+  }
 }
 
 .icon {

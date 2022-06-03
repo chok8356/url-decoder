@@ -17,6 +17,7 @@ module.exports = {
   rules: {
     'order/properties-alphabetical-order': true,
     'at-rule-no-unknown': null,
+    'selector-class-pattern': null,
   },
   overrides: [
     vue,

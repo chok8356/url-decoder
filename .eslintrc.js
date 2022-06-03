@@ -1,5 +1,6 @@
 const rules = {
   'no-continue': 0,
+  'no-return-assign': 0,
   'no-restricted-syntax': 0,
   'no-constructor-return': 0,
   'no-underscore-dangle': 0,
