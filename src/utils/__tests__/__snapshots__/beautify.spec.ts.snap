@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Utils: beautify render 1`] = `
+"{
+  a: 1,
+  b: {
+    c: true
+  }
+}"
+`;

@@ -1,81 +1,132 @@
+const rules = {
+  'no-continue': 0,
+  'no-return-assign': 0,
+  'no-restricted-syntax': 0,
+  'no-constructor-return': 0,
+  'no-underscore-dangle': 0,
+  'no-use-before-define': 0,
+  'consistent-return': 0,
+  'class-methods-use-this': 0,
+  'no-param-reassign': ['error', {
+    props: false,
+  }],
+  'arrow-body-style': 0,
+  'import/prefer-default-export': 0,
+  'import/no-extraneous-dependencies': 0,
+  'import/extensions': 0,
+  'import/no-unresolved': 0,
+  'import/order': ['error', {
+    alphabetize: {
+      order: 'asc',
+      caseInsensitive: true,
+    },
+  }],
+};
+
 module.exports = {
   root: true,
   env: {
-    node: true
+    es6: true,
+    node: true,
+    browser: true,
   },
   extends: [
-    'plugin:vue/vue3-essential',
-    'plugin:vue/vue3-strongly-recommended',
-    'plugin:vue/vue3-recommended',
-    '@vue/standard',
-    '@vue/typescript/recommended'
+    'eslint:recommended',
+    'airbnb-base',
   ],
-  parserOptions: {
-    ecmaVersion: 2020
-  },
-  rules: {
-    '@typescript-eslint/array-type': ['error', {
-      default: 'array',
-      readonly: 'array'
-    }],
-    '@typescript-eslint/indent': ['error', 2, {
-      SwitchCase: 1
-    }],
-    '@typescript-eslint/interface-name-prefix': ['error', {
-      prefixWithI: 'always'
-    }],
-    '@typescript-eslint/no-explicit-any': 0,
-    '@typescript-eslint/type-annotation-spacing': ['error', {
-      after: true
-    }],
-    'comma-dangle': ['error', 'never'],
-    'comma-spacing': ['error', {
-      after: true,
-      before: false
-    }],
-    'keyword-spacing': ['error', {
-      after: true,
-      before: true
-    }],
-    'max-len': ['error', {
-      code: 120
-    }],
-    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'object-curly-spacing': [2, 'always'],
-    'space-before-blocks': [2, 'always'],
-    'space-before-function-paren': [2, 'never'],
-    'space-in-parens': ['error', 'never'],
-    'vue/component-name-in-template-casing': ['error', 'kebab-case'],
-    'vue/html-closing-bracket-newline': ['error', {
-      multiline: 'never',
-      singleline: 'never'
-    }],
-    'vue/html-closing-bracket-spacing': ['error', {
-      endTag: 'never',
-      selfClosingTag: 'always',
-      startTag: 'never'
-    }],
-    'vue/max-attributes-per-line': ['error', {
-      multiline: {
-        allowFirstLine: false,
-        max: 1
-      },
-      singleline: 1
-    }],
-    'vue/script-indent': ['error', 2, {
-      switchCase: 1
-    }]
-  },
+  rules,
   overrides: [
+    // Ts
     {
-      files: [
-        '**/__tests__/*.{j,t}s?(x)',
-        '**/tests/unit/**/*.spec.{j,t}s?(x)'
+      files: '**/*.ts',
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        sourceType: 'module',
+        project: './tsconfig.json',
+      },
+      plugins: [
+        '@typescript-eslint',
       ],
-      env: {
-        jest: true
-      }
-    }
-  ]
-}
+      extends: [
+        'plugin:@typescript-eslint/recommended',
+        'airbnb-typescript/base',
+      ],
+      rules: {
+        ...rules,
+        '@typescript-eslint/no-loop-func': 0,
+        '@typescript-eslint/no-explicit-any': 0,
+      },
+    },
+    // Vue
+    {
+      files: '**/*.vue',
+      parser: 'vue-eslint-parser',
+      parserOptions: {
+        parser: '@typescript-eslint/parser',
+        sourceType: 'module',
+        extraFileExtensions: ['.vue'],
+      },
+      extends: [
+        'plugin:vue/vue3-recommended',
+      ],
+      rules: {
+        ...rules,
+        'vue/multi-word-component-names': 0,
+        'vue/no-undef-components': ['error'],
+        'vue/no-duplicate-attr-inheritance': ['error'],
+        'vue/no-empty-component-block': ['error'],
+        'vue/component-name-in-template-casing': ['error', 'PascalCase'],
+        'vue/custom-event-name-casing': ['error', 'camelCase'],
+        'vue/define-macros-order': ['error', {
+          order: ['defineProps', 'defineEmits'],
+        }],
+        'vue/html-comment-content-spacing': ['error', 'never'],
+        'vue/next-tick-style': ['error', 'promise'],
+        'vue/html-closing-bracket-newline': ['error', {
+          singleline: 'never',
+          multiline: 'never',
+        }],
+        'vue/html-closing-bracket-spacing': ['error', {
+          startTag: 'never',
+          endTag: 'never',
+          selfClosingTag: 'always',
+        }],
+        'vue/max-attributes-per-line': ['error', {
+          singleline: {
+            max: 1,
+          },
+          multiline: {
+            max: 1,
+          },
+        }],
+        'vue/attributes-order': ['error', {
+          order: [
+            'DEFINITION',
+            'LIST_RENDERING',
+            'CONDITIONALS',
+            'RENDER_MODIFIERS',
+            'GLOBAL',
+            'UNIQUE',
+            'SLOT',
+            'TWO_WAY_BINDING',
+            'OTHER_DIRECTIVES',
+            'OTHER_ATTR',
+            'EVENTS',
+            'CONTENT',
+          ],
+          alphabetical: true,
+        }],
+        'vue/component-api-style': ['error',
+          ['script-setup', 'composition'],
+        ],
+        'vue/no-undef-properties': ['error', {
+          ignores: ['/^\\$/'],
+        }],
+        'vue/no-unused-refs': ['error'],
+        'vue/padding-line-between-blocks': ['error', 'always'],
+        'vue/prefer-separate-static-class': ['error'],
+        'vue/prefer-true-attribute-shorthand': ['error', 'always'],
+      },
+    },
+  ],
+};

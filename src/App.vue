@@ -1,225 +1,231 @@
 <template>
-  <div
-    class="ud-app"
-    :class="{ 'is-compare': isCompare === true }">
-    <div class="ud-app__header">
-      <div class="ud-app__title">
-        <h1>URL Decoder</h1>
-      </div>
+  <header :class="$style.header">
+    <h1 :class="$style.title">
+      URL Decoder
+    </h1>
+    <div :class="$style.actions">
       <div
-        class="ud-app-actions">
-        <!-- compare -->
-        <div
-          class="ud-app-actions__item ud-app-actions__item--compare"
-          title="Compare"
-          @click="changeCompare">
-          <ud-icon
-            name="compare"
-            :active="isCompare === true" />
-        </div>
-
-        <!-- light/dark mode -->
-        <div
-          class="ud-app-actions__item ud-app-actions__item--compare"
-          @click="isLight = !isLight">
-          <ud-icon
-            :active="isLight === true"
-            name="sun" />
-        </div>
-
-        <!-- git link -->
-        <a
-          class="ud-app-actions__item ud-app-actions__item--github"
-          href="https://github.com/chok8356/url-decoder"
-          target="_blank">
-          <ud-icon name="github" />
-        </a>
+        v-for="(actionGroup, index) in actions"
+        :key="index"
+        :class="$style.actionsGroup">
+        <Icon
+          v-for="(action, actionIndex) in actionGroup"
+          :key="actionIndex"
+          :class="[
+            $style.icon, {
+              [$style.iconActive]: action.active
+            }
+          ]"
+          :icon="action.icon"
+          :title="action.title"
+          @click="action.action ? action.action() : null" />
       </div>
     </div>
-    <div
-      class="ud-app__body">
-      <!-- left editor -->
-      <ud-editor-ace
-        v-model:value="valueLeft"
-        :diff="markers.left"
-        :is-light="isLight"
-        :width="isCompare ? '50%' : '100%'"
-        @init="(editor) => editors.left = editor" />
-
-      <!-- right editor -->
-      <ud-editor-ace
-        v-show="isCompare"
-        v-model:value="valueRight"
-        :diff="markers.right"
-        :is-light="isLight"
-        width="50%"
-        @init="(editor) => editors.right = editor" />
-    </div>
-  </div>
+  </header>
+  <main :class="$style.main">
+    <Editor
+      v-model:value="text.left"
+      :decode="settings.decode"
+      :extract-param="settings.extractParam"
+      :formatting="settings.formatting"
+      :light="settings.light"
+      :text="settings.compare ? text.right : ''" />
+    <Editor
+      v-if="settings.compare"
+      v-model:value="text.right"
+      :decode="settings.decode"
+      :extract-param="settings.extractParam"
+      :formatting="settings.formatting"
+      :light="settings.light"
+      :text="settings.compare ? text.left : ''" />
+  </main>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, watch, reactive, onMounted } from 'vue'
-import UdEditorAce from '@/components/UdEditorAce.vue'
-import UdIcon from '@/components/UdIcon.vue'
-import { DIFF } from '@/helpers/diff'
-import { LocalStorage } from '@/helpers/localStorage'
-import { EMPTY_MARKERS } from '@/helpers/contants'
+<script setup lang="ts">
+import {
+  computed, onMounted, reactive, shallowReactive, watch,
+} from 'vue';
+import CompareIcon from './assets/icons/compare.svg?raw';
+import DecodeIcon from './assets/icons/decode.svg?raw';
+import ExtractIcon from './assets/icons/extract.svg?raw';
+import FormatPageIcon from './assets/icons/format-page.svg?raw';
+import FormatIcon from './assets/icons/format.svg?raw';
+import GithubIcon from './assets/icons/github.svg?raw';
+import SunIcon from './assets/icons/sun.svg?raw';
+import Editor from './components/Editor/Editor.vue';
+import Icon from './components/Icon.vue';
+import { beautify } from './utils/beautify';
+import { LocalStorage } from './utils/LocalStorage';
 
-export default defineComponent({
-  name: 'App',
-  components: {
-    UdEditorAce,
-    UdIcon
-  },
-  setup() {
-    const valueLeft = ref<string>(LocalStorage.getItem('valueLeft'))
-    const valueRight = ref<string>(LocalStorage.getItem('valueRight'))
-    const isCompare = ref<boolean>(false)
-    const isLight = ref<boolean>(false)
-    const markers = ref(EMPTY_MARKERS)
-    const editors: any = reactive({
-      left: null,
-      right: null
-    })
+interface Settings {
+  light: boolean,
+  compare: boolean,
+  decode: boolean,
+  formatting: boolean,
+  extractParam: boolean,
+}
 
-    watch(() => isLight.value, () => {
-      if (isLight.value === true) {
-        document.documentElement.setAttribute('data-theme', 'light')
-      } else {
-        document.documentElement.setAttribute('data-theme', 'dark')
-      }
-    })
+const settings = reactive<Settings>({
+  light: false,
+  compare: false,
+  decode: true,
+  formatting: true,
+  extractParam: true,
+});
 
-    function changeFocusWhenCompare(value: boolean) {
-      if (value === true) {
-        editors.right.focus()
-      } else {
-        editors.left.focus()
-      }
-    }
+const text = reactive({
+  left: '',
+  right: '',
+});
 
-    function changeCompare() {
-      isCompare.value = !isCompare.value
-      changeFocusWhenCompare(isCompare.value)
-    }
+const makeFormatting = () => {
+  text.left = beautify(text.left);
+  text.right = beautify(text.right);
+};
 
-    function getDiff() {
-      if (isCompare.value === false) return EMPTY_MARKERS
-      if (!valueLeft.value || !valueRight.value) return EMPTY_MARKERS
-      return DIFF.getDiff(editors, valueLeft.value, valueRight.value)
-    }
+const openGithubPage = () => {
+  window.open('https://github.com/chok8356/url-decoder', '_blank');
+};
 
-    function init() {
-      if (LocalStorage.getItem('isCompare') === 'true') {
-        isCompare.value = true
-      }
-      if (LocalStorage.getItem('isLight') === 'true') {
-        isLight.value = true
-      }
-      editors.left.focus()
-      editors.right.blur()
-    }
+const actions = computed(() => [
+  [
+    {
+      title: 'Compare',
+      icon: CompareIcon,
+      active: settings.compare,
+      action: () => settings.compare = !settings.compare,
+    },
+  ],
+  [
+    {
+      title: 'Auto decode pasted text',
+      icon: DecodeIcon,
+      active: settings.decode,
+      action: () => settings.decode = !settings.decode,
+    },
+    {
+      title: 'Auto formatting pasted text',
+      icon: FormatIcon,
+      active: settings.formatting,
+      action: () => settings.formatting = !settings.formatting,
+    },
+    {
+      title: 'Auto extract params from pasted text',
+      icon: ExtractIcon,
+      active: settings.extractParam,
+      action: () => settings.extractParam = !settings.extractParam,
+    },
+  ],
+  [
+    {
+      title: 'Format all pages',
+      icon: FormatPageIcon,
+      action: makeFormatting,
+    },
+    {
+      title: 'Theme',
+      icon: SunIcon,
+      active: settings.light,
+      action: () => settings.light = !settings.light,
+    },
+    {
+      title: 'Github',
+      icon: GithubIcon,
+      action: openGithubPage,
+    },
+  ],
+]);
 
-    watch([() => valueLeft.value, () => valueRight.value], () => {
-      LocalStorage.setItem('valueLeft', valueLeft.value)
-      LocalStorage.setItem('valueRight', valueRight.value)
-      markers.value = getDiff()
-    })
-
-    watch(() => isCompare.value, () => {
-      if (isCompare.value === true) {
-        markers.value = getDiff()
-      } else {
-        markers.value = EMPTY_MARKERS
-      }
-      LocalStorage.setItem('isCompare', isCompare.value)
-    })
-
-    watch(() => isLight.value, () => {
-      LocalStorage.setItem('isLight', isLight.value)
-    })
-
-    onMounted(() => {
-      init()
-    })
-
-    return {
-      valueLeft,
-      valueRight,
-      isCompare,
-      editors,
-      markers,
-      changeCompare,
-      isLight
-    }
+watch(() => settings, () => {
+  LocalStorage.put('settings', settings);
+  if (settings.light) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
   }
-})
+}, { deep: true });
+
+watch(() => text, () => {
+  LocalStorage.put('text', text);
+}, { deep: true });
+
+onMounted(() => {
+  Object.assign(settings, shallowReactive(LocalStorage.get('settings')));
+  Object.assign(text, shallowReactive(LocalStorage.get('text')));
+});
 </script>
 
-<style scoped lang="scss">
-@include b(app) {
-  color: #232323;
-  display: flex;
-  flex-direction: column;
-  font-family: Consolas, monospace, sans-serif;
-  font-size: $font-size;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+<style lang="scss">
+#app {
+  display: grid;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  grid-auto-rows: auto 1fr;
   height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
   width: 100vw;
+}
+</style>
 
-  @include e(header) {
-    align-items: center;
-    background-color: var(--color-header);
-    border-bottom: 1px solid var(--color-grey);
-    box-shadow: 0 0 0.5rem -0.25rem rgba(0, 0, 0, 0.2);
-    display: flex;
-    padding: 0.75rem 1.25rem;
-    width: 100%;
-    z-index: 5;
-  }
-
-  @include e(body) {
-    display: flex;
-    flex-grow: 1;
-    height: 100%;
-    width: 100%;
-  }
-
-  @include e(title) {
-    flex-grow: 1;
-
-    h1 {
-      color: var(--color-title);
-      font-size: 1.35rem;
-      margin: 0;
-    }
-  }
+<style lang="scss" module>
+.header {
+  align-items: center;
+  background-color: var(--color-grey);
+  box-shadow: 0 0 0.25rem 0.1rem rgb(0 0 0 / 20%);
+  display: flex;
+  grid-gap: 1rem;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  width: 100%;
+  z-index: 1;
 }
 
-@include b(app-actions) {
-  align-items: center;
+.main {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+}
+
+.title {
+  color: var(--color-white);
+  display: block;
+  font-size: 1.35rem;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.actions {
   display: inline-flex;
-  margin-left: -0.5rem;
+  grid-gap: 2rem;
   width: auto;
 
-  * {
-    margin-left: 0.5rem;
-  }
-
-  @include e(item) {
-    align-items: center;
-    color: var(--color-icon);
-    cursor: pointer;
+  &Group {
     display: inline-flex;
-    width: auto;
-
-    svg {
-      height: 1.25rem;
-      width: 1.25rem;
-    }
+    grid-gap: 1rem;
   }
 }
+
+.icon {
+  color: var(--color-light-grey);
+  cursor: pointer;
+  width: 1.25rem;
+
+  &:hover {
+    filter: brightness(125%);
+  }
+
+  &Active {
+    color: var(--color-blue);
+  }
+}
+
+.link {
+  display: inline-flex;
+  width: auto;
+}
+
 </style>
