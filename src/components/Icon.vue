@@ -2,13 +2,20 @@
   <!--eslint-disable-->
   <i
     :class="$style.icon"
+    :title="title"
     v-html="icon">
   </i>
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{icon: string}>(), {
+interface Props {
+  icon: string,
+  title: string
+}
+
+withDefaults(defineProps<Props>(), {
   icon: '',
+  title: '',
 });
 
 </script>
