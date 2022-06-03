@@ -29,7 +29,8 @@ import {
 } from 'vue';
 import DecodeIcon from '../../assets/icons/decode.svg?raw';
 import EncodeIcon from '../../assets/icons/encode.svg?raw';
-import { isCanBeDecoded } from '../../utils/isCanBeDecoded';
+import { beautify } from '../../utils/beautify';
+import { QueryString } from '../../utils/QueryString';
 import Icon from '../Icon.vue';
 
 import { diff } from './extensions/diff';
@@ -37,22 +38,22 @@ import { diff } from './extensions/diff';
 interface Props {
   value: string,
   text?: string,
-  dark: boolean
-  decode: boolean
-  formatting: boolean
+  light?: boolean
+  decode?: boolean,
+  formatting?: boolean,
+  extractParam?: boolean,
 }
 
 const props = withDefaults(defineProps<Props>(), {
   value: '',
   text: '',
-  dark: false,
+  light: false,
   decode: false,
   formatting: false,
+  extractParam: false,
 });
 
 const emit = defineEmits(['update:value']);
-
-const beautify = require('js-beautify').js;
 
 const div = ref<HTMLDivElement>();
 
@@ -93,35 +94,21 @@ const extensions = computed<Extension[]>(() => [
       let pasted = e.clipboardData?.getData('Text') || '';
 
       if (props.decode) {
-        pasted = decodeURIComponent(pasted);
+        pasted = QueryString.decodeFull(pasted);
+      }
+
+      if (props.extractParam) {
+        pasted = QueryString.extractParam(pasted);
       }
 
       if (props.formatting) {
-        pasted = beautify(pasted, { indent_size: 2 });
+        pasted = beautify(pasted);
       }
 
       view.dispatch(view.state.replaceSelection(pasted));
-
-      // TODO: add new functionality
-      // if (props.formatting) {
-      //   const { doc } = editor.value.state;
-      //   const { length } = doc;
-      //   const text = beautify(doc.toString() || pasted, { indent_size: 2 });
-      //
-      //   const { from } = editor.value.state.selection.ranges[0];
-      //
-      //   view.dispatch({
-      //     changes: {
-      //       from: 0,
-      //       to: length,
-      //       insert: text,
-      //     },
-      //     selection: EditorSelection.single(from + text.length - length),
-      //   });
-      // }
     },
   }),
-  props.dark ? oneDark : [],
+  props.light ? [] : oneDark,
   props.text ? diff(props.text) : [],
 ]);
 
@@ -130,7 +117,7 @@ const actions = computed(() => [
     title: 'Decode',
     icon: DecodeIcon,
     action: decode,
-    show: isCanBeDecoded(props.value),
+    show: QueryString.canBeDecoded(props.value),
   },
   {
     title: 'Encode',
@@ -140,11 +127,13 @@ const actions = computed(() => [
 ]);
 
 const decode = () => {
-  emit('update:value', decodeURIComponent(props.value));
+  // emit('update:value', decodeURIComponent(props.value));
+  emit('update:value', QueryString.decode(props.value));
 };
 
 const encode = () => {
-  emit('update:value', encodeURIComponent(props.value));
+  // emit('update:value', encodeURIComponent(props.value));
+  emit('update:value', QueryString.encode(props.value));
 };
 
 // Watchers

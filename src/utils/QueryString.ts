@@ -1,9 +1,46 @@
 export class QueryString {
-  static parse(query) {
-    return JSON.parse(decodeURIComponent(query));
+  static canBeDecoded = (query: string): boolean => {
+    return query !== QueryString.decode((query));
+  };
+
+  static decode(query: string): string {
+    try {
+      return decodeURIComponent(query);
+    } catch (e) {
+      return query;
+    }
   }
 
-  static stringify(object) {
-    return encodeURIComponent(JSON.stringify(object));
+  static decodeFull(query: string): string {
+    const text = QueryString.decode(query);
+    if (QueryString.canBeDecoded(text)) {
+      return QueryString.decodeFull(text);
+    }
+    return text;
+  }
+
+  static encode(query: string): string {
+    try {
+      return encodeURIComponent(query);
+    } catch (e) {
+      return query;
+    }
+  }
+
+  static extractParam(query: string): string {
+    try {
+      const result = {};
+      const params = new URLSearchParams(query);
+      for (const [key, value] of params.entries()) {
+        try {
+          result[key] = JSON.parse(value);
+        } catch (e) {
+          result[key] = value;
+        }
+      }
+      return JSON.stringify(result);
+    } catch (e) {
+      return query;
+    }
   }
 }

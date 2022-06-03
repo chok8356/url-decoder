@@ -25,23 +25,25 @@
   <main :class="$style.main">
     <Editor
       v-model:value="text.left"
-      :dark="!settings.light"
       :decode="settings.decode"
+      :extract-param="settings.extractParam"
       :formatting="settings.formatting"
+      :light="settings.light"
       :text="settings.compare ? text.right : ''" />
     <Editor
       v-if="settings.compare"
       v-model:value="text.right"
-      :dark="!settings.light"
       :decode="settings.decode"
+      :extract-param="settings.extractParam"
       :formatting="settings.formatting"
+      :light="settings.light"
       :text="settings.compare ? text.left : ''" />
   </main>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, onMounted, reactive, watch,
+  computed, onMounted, reactive, shallowReactive, watch,
 } from 'vue';
 import CompareIcon from './assets/icons/compare.svg?raw';
 import DecodeIcon from './assets/icons/decode.svg?raw';
@@ -52,6 +54,7 @@ import GithubIcon from './assets/icons/github.svg?raw';
 import SunIcon from './assets/icons/sun.svg?raw';
 import Editor from './components/Editor/Editor.vue';
 import Icon from './components/Icon.vue';
+import { beautify } from './utils/beautify';
 import { LocalStorage } from './utils/LocalStorage';
 
 interface Settings {
@@ -65,9 +68,9 @@ interface Settings {
 const settings = reactive<Settings>({
   light: false,
   compare: false,
-  decode: false,
-  formatting: false,
-  extractParam: false,
+  decode: true,
+  formatting: true,
+  extractParam: true,
 });
 
 const text = reactive({
@@ -75,11 +78,9 @@ const text = reactive({
   right: '',
 });
 
-const beautify = require('js-beautify').js;
-
 const makeFormatting = () => {
-  text.left = beautify(text.left, { indent_size: 2 });
-  text.right = beautify(text.right, { indent_size: 2 });
+  text.left = beautify(text.left);
+  text.right = beautify(text.right);
 };
 
 const openGithubPage = () => {
@@ -149,8 +150,8 @@ watch(() => text, () => {
 }, { deep: true });
 
 onMounted(() => {
-  Object.assign(settings, reactive(LocalStorage.get('settings')));
-  Object.assign(text, reactive(LocalStorage.get('text')));
+  Object.assign(settings, shallowReactive(LocalStorage.get('settings')));
+  Object.assign(text, shallowReactive(LocalStorage.get('text')));
 });
 </script>
 
