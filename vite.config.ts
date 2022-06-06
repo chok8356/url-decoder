@@ -3,10 +3,16 @@ import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig((args) => {
-  const generateScopedName = args.mode === 'production'
-    ? '[hash:base64:5]'
-    : '[name]__[local]--[hash:base64:5]';
+  let base = '/';
+  let generateScopedName = '[name]__[local]--[hash:base64:5]';
+
+  if (args.mode === 'production') {
+    base = '/url-decoder/';
+    generateScopedName = '[hash:base64:5]';
+  }
+
   return {
+    base,
     plugins: [
       vue(),
     ],

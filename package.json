@@ -1,6 +1,6 @@
 {
   "name": "url-decoder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "dev": "vite",
     "test:unit": "jest",
@@ -9,7 +9,8 @@
     "lint:fix": "npm run lint:code -- --fix && npm run lint:styles -- --fix",
     "lint:code": "eslint . --ext .js,.ts,.vue",
     "lint:styles": "stylelint ./**/*.{css,scss,vue}",
-    "pre-commit": "lint-staged"
+    "pre-commit": "lint-staged",
+    "deploy": "deploy.sh"
   },
   "dependencies": {
     "vue": "^3.2.36"
