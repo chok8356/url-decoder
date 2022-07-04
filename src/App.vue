@@ -98,19 +98,19 @@ const actions = computed(() => [
   ],
   [
     {
-      title: 'Auto decode pasted text',
+      title: 'Auto decode text on paste',
       icon: DecodeIcon,
       active: settings.decode,
       action: () => settings.decode = !settings.decode,
     },
     {
-      title: 'Auto formatting pasted text',
+      title: 'Auto formatting text on paste',
       icon: FormatIcon,
       active: settings.formatting,
       action: () => settings.formatting = !settings.formatting,
     },
     {
-      title: 'Auto extract params from pasted text',
+      title: 'Auto extract params from text on paste',
       icon: ExtractIcon,
       active: settings.extractParam,
       action: () => settings.extractParam = !settings.extractParam,
@@ -118,7 +118,7 @@ const actions = computed(() => [
   ],
   [
     {
-      title: 'Format all pages',
+      title: 'Format all texts',
       icon: FormatPageIcon,
       action: makeFormatting,
     },
