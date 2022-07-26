@@ -18,12 +18,12 @@
 </template>
 
 <script setup lang="ts">
-import { EditorState, basicSetup } from '@codemirror/basic-setup';
 import { indentMore, indentLess } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
-import { Extension, StateEffect } from '@codemirror/state';
+import { EditorState, Extension, StateEffect } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { EditorView, ViewUpdate, keymap } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
 import {
   computed, onBeforeUnmount, onMounted, ref, watch,
 } from 'vue';

@@ -31,13 +31,18 @@ export class QueryString {
     try {
       const result = {};
       const params = new URLSearchParams(query);
+
       for (const [key, value] of params.entries()) {
+        if (key === query) continue;
         try {
           result[key] = JSON.parse(value);
         } catch (e) {
           result[key] = value;
         }
       }
+
+      if (!Object.keys(result).length) return query;
+
       return JSON.stringify(result);
     } catch (e) {
       return query;
