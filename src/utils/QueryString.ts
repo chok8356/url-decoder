@@ -1,3 +1,5 @@
+import { customDecodeURIComponent } from './customDecodeURIComponent';
+
 export class QueryString {
   static canBeDecoded = (query: string): boolean => {
     return query !== QueryString.decode((query));
@@ -7,7 +9,7 @@ export class QueryString {
     try {
       return decodeURIComponent(query);
     } catch (e) {
-      return query;
+      return customDecodeURIComponent(query);
     }
   }
 
@@ -30,10 +32,12 @@ export class QueryString {
   static extractParam(query: string): string {
     try {
       const result = {};
-      const params = new URLSearchParams(query);
+
+      const [urlString, paramsString] = query.split('?');
+      const params = new URLSearchParams(paramsString || urlString);
 
       for (const [key, value] of params.entries()) {
-        if (key === query) continue;
+        if (key === urlString) continue;
         try {
           result[key] = JSON.parse(value);
         } catch (e) {

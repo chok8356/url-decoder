@@ -13,6 +13,15 @@ describe('Utils: QueryString', () => {
 
   it('decode', () => {
     expect(QueryString.decode('%7B%20a%3A%201%20%7D')).toBe('{ a: 1 }');
+    expect(QueryString.decode('%25')).toBe('%');
+    expect(QueryString.decode('%')).toBe('%');
+    expect(QueryString.decode('st%C3%A5le')).toBe('ståle');
+    expect(QueryString.decode('%st%C3%A5le%')).toBe('%ståle%');
+    expect(QueryString.decode('%%7Bst%C3%A5le%7D%')).toBe('%{ståle}%');
+    expect(QueryString.decode('%7B%ab%%7C%de%%7D')).toBe('{%ab%|%de%}');
+    expect(QueryString.decode('%FE%FF')).toBe('\uFFFD\uFFFD');
+    expect(QueryString.decode('%C2')).toBe('\uFFFD');
+    expect(QueryString.decode('%C2%B5')).toBe('µ');
   });
 
   it('decodeFull', () => {
